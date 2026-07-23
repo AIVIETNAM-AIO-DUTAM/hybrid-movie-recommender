@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Movie Recommendation System — Sprint Plan (App → 01/08)</title>
+<style>
+  /* ============ SCREEN + PRINT SHARED ============ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 28px;
+    font-size: 13px;
+  }
+  .container { max-width: 980px; margin: 0 auto; background: white; padding: 38px 44px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border-radius: 8px; }
+
+  /* ============ HEADINGS ============ */
+  h1 { font-size: 26px; color: #0f172a; margin-bottom: 4px; font-weight: 800; }
+  h2 { font-size: 18px; color: #0f766e; margin: 30px 0 14px; padding-bottom: 7px; border-bottom: 2px solid #0f766e; }
+  h3 { font-size: 14px; color: #1e293b; margin: 18px 0 8px; font-weight: 700; }
+  h4 { font-size: 12px; color: #475569; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  p { margin-bottom: 8px; }
+  .muted { color: #64748b; font-size: 11.5px; }
+  code { background: #f1f5f9; color: #0f766e; padding: 1px 6px; border-radius: 3px; font-family: "SF Mono", Monaco, monospace; font-size: 11.5px; }
+
+  /* ============ HERO ============ */
+  .hero { text-align: center; padding-bottom: 14px; border-bottom: 3px solid #0f766e; margin-bottom: 8px; }
+  .hero .subtitle { color: #475569; font-size: 14px; margin-bottom: 14px; }
+  .hero .meta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  .meta-chip { background: #ecfeff; border: 1px solid #67e8f9; color: #0e7490; padding: 4px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+  .meta-chip.deadline { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+  .meta-chip.report { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+
+  /* ============ SECTIONS ============ */
+  section { margin-bottom: 6px; }
+
+  /* ============ TEAM GRID ============ */
+  .team-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+  .team-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
+  .team-card .avatar { font-size: 22px; }
+  .team-card .name { font-weight: 700; font-size: 12px; margin: 4px 0 2px; }
+  .team-card .role { color: #64748b; font-size: 10.5px; margin-bottom: 6px; }
+  .team-card .focus { font-size: 10px; color: #0e7490; background: #ecfeff; padding: 3px 6px; border-radius: 4px; }
+
+  /* ============ TIMELINE TABLE ============ */
+  .timeline-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11.5px; }
+  .timeline-table th { background: #0f766e; color: white; padding: 7px 6px; text-align: center; font-weight: 600; font-size: 10.5px; }
+  .timeline-table th.week { background: #134e4a; }
+  .timeline-table th.report { background: #ca8a04; }
+  .timeline-table td { padding: 6px; border: 1px solid #e2e8f0; text-align: center; vertical-align: top; }
+  .timeline-table td.person { background: #f1f5f9; font-weight: 700; text-align: left; font-size: 11px; }
+  .timeline-table .day { background: #f8fafc; font-size: 10px; color: #64748b; }
+  .timeline-table .task-cell { font-weight: 600; color: #0f766e; font-size: 11px; }
+  .timeline-table .task-cell.report { color: #ca8a04; }
+  .timeline-table .meeting { background: #fef3c7; color: #92400e; font-weight: 700; }
+  .timeline-table .freeze { background: #fecaca; color: #991b1b; font-weight: 700; font-size: 10px; }
+  .timeline-table .empty { color: #cbd5e1; }
+  .timeline-table .p1-bg { background: #ecfeff; }
+  .timeline-table .p2-bg { background: #fef9c3; }
+
+  /* ============ PHASE BANNER ============ */
+  .phases { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; margin-top: 10px; }
+  .phase { padding: 14px; border-radius: 6px; border-left: 4px solid; }
+  .phase.p1 { background: #ecfeff; border-color: #0891b2; }
+  .phase.p2 { background: #fef9c3; border-color: #ca8a04; }
+  .phase h3 { color: #0f172a; margin-top: 0; }
+  .phase .dates { color: #64748b; font-size: 11px; }
+  .phase .goal { font-size: 12px; margin-top: 6px; }
+  .phase .tasks { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .phase .deadline { font-size: 12px; color: #991b1b; font-weight: 700; margin-top: 6px; }
+
+  /* ============ TASK CARD ============ */
+  .task { border: 1px solid #e2e8f0; border-left: 4px solid; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; page-break-inside: avoid; }
+  .task.p1 { border-left-color: #0891b2; background: #ffffff; }
+  .task.p2 { border-left-color: #ca8a04; background: #ffffff; }
+  .task.freeze { border-left-color: #dc2626; background: #fff5f5; }
+  .task-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px; margin-bottom: 10px; }
+  .task-id { font-size: 14px; font-weight: 800; color: #0f172a; }
+  .task-id .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; margin-left: 6px; font-weight: 600; vertical-align: middle; }
+  .badge.p1 { background: #ecfeff; color: #0e7490; border: 1px solid #67e8f9; }
+  .badge.p2 { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+  .badge.freeze { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .task-meta { display: flex; gap: 14px; font-size: 11px; color: #64748b; flex-wrap: wrap; }
+  .task-meta b { color: #1e293b; }
+  .task-desc { font-size: 12px; margin: 8px 0; }
+
+  /* SUB-CHECKLIST */
+  .subcheck { background: #f8fafc; border-radius: 5px; padding: 10px 12px 10px 28px; margin: 8px 0; }
+  .subcheck h4 { color: #0f766e; margin-top: 0; }
+  .subcheck ul { list-style: none; }
+  .subcheck li { padding: 2px 0 2px 18px; position: relative; font-size: 11.5px; }
+  .subcheck li::before { content: "☐"; position: absolute; left: 0; color: #0f766e; font-weight: bold; }
+
+  /* FILES */
+  .files { background: #f1f5f9; border-radius: 5px; padding: 8px 12px; margin: 8px 0; font-size: 11px; }
+  .files h4 { color: #7c3aed; margin-top: 0; }
+  .files ul { list-style: none; }
+  .files li { padding: 2px 0 2px 14px; position: relative; }
+  .files li::before { content: "▸"; position: absolute; left: 0; color: #7c3aed; }
+  .files code { font-size: 10.5px; }
+
+  /* ACCEPTANCE */
+  .accept { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 5px; padding: 10px 12px 10px 28px; margin-top: 8px; }
+  .accept h4 { color: #15803d; margin-top: 0; }
+  .accept ul { list-style: none; }
+  .accept li { padding: 2px 0 2px 18px; position: relative; font-size: 11.5px; }
+  .accept li::before { content: "✓"; position: absolute; left: 0; color: #15803d; font-weight: bold; }
+
+  /* FORMULA */
+  .formula { background: #0f172a; color: #4ade80; padding: 8px 12px; border-radius: 4px; font-family: "SF Mono", Monaco, monospace; font-size: 11px; margin: 8px 0; border-left: 3px solid #4ade80; white-space: pre; overflow-x: auto; }
+
+  /* DOD */
+  .dod { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .dod li { background: #f8fafc; padding: 8px 12px 8px 32px; border-radius: 4px; position: relative; border: 1px solid #e2e8f0; font-size: 11.5px; }
+  .dod li::before { content: "☐"; position: absolute; left: 10px; color: #0f766e; font-size: 14px; }
+
+  /* RISKS */
+  .risk { background: #fff7ed; border-left: 3px solid #ea580c; padding: 8px 12px; margin-bottom: 6px; font-size: 11.5px; border-radius: 3px; }
+  .risk b { color: #9a3412; }
+
+  /* FOOTER */
+  footer { text-align: center; color: #94a3b8; font-size: 10.5px; padding: 18px 0 0; border-top: 1px solid #e2e8f0; margin-top: 24px; }
+
+  /* CALLOUT */
+  .callout { background: #fef2f2; border: 2px solid #dc2626; border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-weight: 700; color: #991b1b; text-align: center; font-size: 13px; }
+
+  /* ============ PRINT ============ */
+  @page { size: A4; margin: 12mm 10mm; }
+  @media print {
+    body { background: white; padding: 0; font-size: 11px; }
+    .container { max-width: 100%; padding: 0; box-shadow: none; border-radius: 0; }
+    h2 { page-break-after: avoid; }
+    .task, section { page-break-inside: avoid; }
+    h1 { font-size: 22px; }
+    h2 { font-size: 15px; margin-top: 18px; }
+    .hero { border-bottom: 2px solid #0f766e; }
+    a { color: inherit; text-decoration: none; }
+    .team-grid { grid-template-columns: repeat(5, 1fr); }
+    .phases { grid-template-columns: 1.6fr 1fr; }
+    .dod { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>🎬 Movie Recommendation System</h1>
+    <div class="subtitle">Sprint Plan · 14 ngày · App xong 01/08 · Report 5 ngày cuối</div>
+    <div class="meta">
+      <span class="meta-chip">📅 24/07 → 06/08/2026</span>
+      <span class="meta-chip deadline">🔒 App freeze 01/08</span>
+      <span class="meta-chip report">📊 Report 02/08 → 06/08</span>
+      <span class="meta-chip">👥 Team 5 người</span>
+      <span class="meta-chip">🎯 Ship T4 06/08</span>
+    </div>
+  </div>
+
+  <!-- CALL OUT -->
+  <div class="callout">
+    ⚠️ App phải HOÀN THÀNH vào cuối ngày <u>01/08 (D9)</u> · Sau đó 5 ngày (02/08 → 06/08) chỉ tập trung REPORT + Polish
+  </div>
+
+  <!-- TEAM -->
+  <section>
+    <h2>👥 Team Roster</h2>
+    <div class="team-grid">
+      <div class="team-card"><div class="avatar">🎯</div><div class="name">Tân Dư</div><div class="role">Tech Leader</div><div class="focus">App · Demo</div></div>
+      <div class="team-card"><div class="avatar">📊</div><div class="name">Trần Hoàng Minh Tâm</div><div class="role">AI Data</div><div class="focus">EDA · Parquet</div></div>
+      <div class="team-card"><div class="avatar">🤖</div><div class="name">tran Duong</div><div class="role">AI Model</div><div class="focus">Simple + Content</div></div>
+      <div class="team-card"><div class="avatar">⚙️</div><div class="name">18- Thanh Loan</div><div class="role">AI Pipeline</div><div class="focus">CF · Eval</div></div>
+      <div class="team-card"><div class="avatar">🧪</div><div class="name">Hoàng Đức Kiên</div><div class="role">QA</div><div class="focus">Test · Regression</div></div>
+    </div>
+  </section>
+
+  <!-- PHASES -->
+  <section>
+    <h2>🚀 Hai giai đoạn</h2>
+    <div class="phases">
+      <div class="phase p1">
+        <h3>Phase 1 — App Build</h3>
+        <div class="dates">T5 24/07 → T6 01/08 (9 ngày)</div>
+        <div class="goal">Parquet + Simple + Content + CF + Demo 3 tab + Eval + Regression</div>
+        <div class="tasks">T01 → T11</div>
+        <div class="deadline">🔒 APP FREEZE cuối D9 01/08</div>
+      </div>
+      <div class="phase p2">
+        <h3>Phase 2 — Report &amp; Ship</h3>
+        <div class="dates">T7 02/08 → T4 06/08 (5 ngày)</div>
+        <div class="goal">Final report 9 section + charts + slides + rehearsal + ship</div>
+        <div class="tasks">T12 → T14</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE TABLE -->
+  <section>
+    <h2>📅 Timeline 14 ngày</h2>
+    <table class="timeline-table">
+      <thead>
+        <tr>
+          <th rowspan="2">Người</th>
+          <th class="week" colspan="9">PHASE 1 — APP BUILD (xong 01/08)</th>
+          <th class="report" colspan="5">PHASE 2 — REPORT &amp; SHIP</th>
+        </tr>
+        <tr>
+          <th>D1<br>T5 24/07</th><th>D2<br>T6 25/07</th><th>D3<br>T7 26/07</th><th>D4<br>CN 27/07</th><th>D5<br>T2 28/07</th><th>D6<br>T3 29/07</th><th>D7<br>T4 30/07</th><th>D8<br>T5 31/07</th><th>D9<br>T6 01/08</th>
+          <th>D10<br>T7 02/08</th><th>D11<br>CN 03/08</th><th>D12<br>T2 04/08</th><th>D13<br>T3 05/08</th><th>D14<br>T4 06/08</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="person">🎯 Tân Dư</td>
+          <td class="task-cell p1-bg">T01<br><span class="day">setup</span></td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell p1-bg">T09</td>
+          <td class="task-cell p1-bg">T09</td>
+          <td class="freeze">🔒 FREEZE</td>
+          <td class="task-cell report">T12</td>
+          <td class="task-cell report">T13</td>
+          <td class="task-cell report">T13</td>
+          <td class="task-cell report">polish</td>
+          <td class="task-cell report">T14</td>
+        </tr>
+        <tr>
+          <td class="person">📊 Tâm</td>
+          <td class="task-cell p1-bg">T01</td>
+          <td class="task-cell p1-bg">T02</td>
+          <td class="task-cell p1-bg">T03</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell report">T12</td>
+          <td class="task-cell report">T12</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell report">T14</td>
+        </tr>
+        <tr>
+          <td class="person">🤖 Duong</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell p1-bg">T04<br>T05</td>
+          <td class="task-cell p1-bg">T04<br>T05</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell report">T12</td>
+          <td class="task-cell report">T12</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell report">T14</td>
+        </tr>
+        <tr>
+          <td class="person">⚙️ Loan</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell p1-bg">T06</td>
+          <td class="task-cell p1-bg">T06</td>
+          <td class="task-cell p1-bg">T07<br>T08</td>
+          <td class="task-cell p1-bg">T08</td>
+          <td class="task-cell p1-bg">T10</td>
+          <td class="task-cell p1-bg">T10</td>
+          <td class="task-cell report">T12</td>
+          <td class="task-cell report">T13</td>
+          <td class="task-cell report">T13</td>
+          <td class="empty">—</td>
+          <td class="task-cell report">T14</td>
+        </tr>
+        <tr>
+          <td class="person">🧪 Kiên</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="task-cell p1-bg">test</td>
+          <td class="empty">—</td>
+          <td class="task-cell p1-bg">test</td>
+          <td class="task-cell p1-bg">test</td>
+          <td class="task-cell p1-bg">T11</td>
+          <td class="task-cell report">T12</td>
+          <td class="task-cell report">T13</td>
+          <td class="task-cell report">T13</td>
+          <td class="empty">—</td>
+          <td class="task-cell report">T14</td>
+        </tr>
+        <tr>
+          <td class="person">📣 Meeting</td>
+          <td class="meeting">kickoff</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="meeting">review</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="freeze">🔒 FREEZE</td>
+          <td class="empty">—</td>
+          <td class="meeting">review</td>
+          <td class="empty">—</td>
+          <td class="empty">—</td>
+          <td class="meeting">ship</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TASK DETAILS -->
+  <section>
+    <h2>📋 Task Details</h2>
+
+    <h3 style="color:#0891b2; border-bottom:1px solid #e0f2fe; padding-bottom:4px;">▌ Phase 1 — App Build (T01 → T11) — Deadline 01/08</h3>
+
+    <!-- T01 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T01 · Setup môi trường + onboard<span class="badge p1">D1 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Tân Dư, Tâm</b></span><span>📅 D1 T5 24/07</span><span>⏱ 1d</span></div>
+      </div>
+      <p class="task-desc">Setup repo, venv, kiểm tra dataset, onboard 5 người vào role files. Đồng loạt kickoff.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Tạo venv + cài <code>requirements.txt</code></li>
+          <li>Verify <code>movies.csv</code> (2.9MB) + <code>ratings.csv</code> (647MB) đọc được bằng pandas</li>
+          <li>Confirm schema đúng PDF §2.1, §2.2</li>
+          <li>Điền tên 5 người vào <code>TEAM_BOARD.md</code> + 5 role files</li>
+          <li>Sync board 5 cột với tool Kanban</li>
+          <li>Có mặt họp kickoff chiều T5</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files</h4>
+        <ul>
+          <li><code>TEAM_BOARD.md</code> — roster + snapshot</li>
+          <li><code>plans/roles/01-05-*.md</code> — 5 role files</li>
+          <li><code>.gitignore</code> — exclude data/raw CSV</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Mọi người có thể <code>source .venv/bin/activate</code> + <code>pytest tests/ -v</code> xanh</li>
+          <li>Board có 14 task ở cột "Chưa làm"</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T02 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T02 · EDA movies + ratings<span class="badge p1">D2 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Tâm</b></span><span>📅 D2 T6 25/07</span><span>⏱ 1d</span></div>
+      </div>
+      <p class="task-desc">EDA 2 file raw để hiểu data trước khi clean. Ghi nhận số liệu sparsity, distribution, duplicate.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Notebook 01: <code>movies.shape</code>, dtypes, <code>isna</code>, genre distribution, duplicate titles, year range</li>
+          <li>Notebook 02: <code>n_users</code>, <code>n_movies</code>, <code>n_ratings</code>, sparsity %, rating histogram, top user/movie counts</li>
+          <li>Ghi nhận số liệu vào <code>reports/eda_summary.md</code> (đổi TBD → số thật)</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>notebooks/01_eda_movies.ipynb</code> — điền cells</li>
+          <li><code>notebooks/02_eda_ratings.ipynb</code> — điền cells</li>
+          <li><code>reports/eda_summary.md</code> — điền TBD</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>2 notebook chạy không lỗi trên parquet 25M</li>
+          <li>Có số liệu: sparsity, rating mean, genre top 5</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T03 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T03 · Clean → parquet + data dictionary<span class="badge p1">D3 · Phase 1 · BOTTLENECK</span></div>
+        <div class="task-meta"><span>👤 <b>Tâm</b></span><span>📅 D3 T7 26/07</span><span>⏱ 1d (HARD DEADLINE)</span></div>
+      </div>
+      <p class="task-desc">Làm sạch data, áp filter user≥20 / movie≥50, lưu parquet với dtype tối ưu. Đây là <b>bottleneck</b> — 6 task phụ thuộc, phải xong cuối D3 để unblock.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Implement <code>load_movies_raw()</code> + <code>load_ratings_raw()</code> với friendly FileNotFoundError</li>
+          <li>Implement <code>clean_movies()</code>: extract year (regex linh hoạt), genres_list (filter sentinel), genres_text</li>
+          <li>Implement <code>clean_ratings()</code>: drop_duplicates, filter iterate-to-fixpoint user≥20/movie≥50</li>
+          <li>Implement <code>save_processed()</code> + <code>load_processed()</code></li>
+          <li>Implement <code>scripts/run_pipeline.py::main()</code></li>
+          <li>Cập nhật <code>docs/data-dictionary.md</code> với số liệu thật</li>
+          <li>Cập nhật <code>reports/eda_summary.md</code> (bảng trước/sau filter)</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>src/data_processing.py</code> — điền TODO (signature đã có)</li>
+          <li><code>scripts/run_pipeline.py</code> — điền <code>main()</code></li>
+          <li><code>docs/data-dictionary.md</code> — số thật</li>
+          <li><code>reports/eda_summary.md</code> — điền TBD</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li><code>data/processed/movies_clean.parquet</code> + <code>ratings_clean.parquet</code> tồn tại cuối D3</li>
+          <li>Filter: user≥20, movie≥50 (iterate to fixpoint)</li>
+          <li>Duong/Loan <code>load_processed()</code> được D4 sáng</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T04 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T04 · Simple Recommender (weighted rating)<span class="badge p1">D4–D5 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Duong</b></span><span>📅 D4–D5 CN–T2 27–28/07</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Top-K phim theo IMDb weighted rating — baseline + fallback cho cold-start.</p>
+      <div class="formula">WR = (v / (v + m)) * R + (m / (v + m)) * C
+v = num_ratings, R = avg_rating
+C = mean toàn dataset, m = quantile(0.80)</div>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Implement <code>build_movie_stats(ratings, m_quantile=0.80)</code>: groupby + agg + WR formula</li>
+          <li>Lưu <code>C</code> và <code>m</code> vào <code>stats.attrs</code></li>
+          <li>Implement <code>recommend_top_movies(movies, stats, top_k, genre=None)</code></li>
+          <li>Filter <code>num_ratings &gt;= m</code> (fallback all nếu rỗng)</li>
+          <li>Sort deterministic: WR desc → num_ratings desc → movieId asc</li>
+          <li>Chạy <code>pytest tests/test_recommender.py::test_simple_*</code></li>
+          <li>Verify top-10 trên parquet (Shawshank, Pulp Fiction)</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>src/recommender_simple.py</code> — điền TODO</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Tests S1, S2, S3 xanh</li>
+          <li>Trên parquet: top-10 không có phim <code>num_ratings &lt; m</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T05 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T05 · Content-based (genre cosine)<span class="badge p1">D4–D5 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Duong</b></span><span>📅 D4–D5 CN–T2 27–28/07</span><span>⏱ 1.5d (parallel T04)</span></div>
+      </div>
+      <p class="task-desc">Phim tương tự theo genre dùng CountVectorizer + cosine similarity (sparse on-demand, tránh OOM).</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Implement <code>build_content_model(movies)</code>: CountVectorizer <code>token_pattern=r"\S+"</code> (giữ Sci-Fi)</li>
+          <li>Implement <code>recommend_similar_movies(model, movie, top_k)</code></li>
+          <li>Resolve idx: exact match → prefer-year partial match</li>
+          <li>Guard zero-norm query (no genres) → ValueError</li>
+          <li>Cosine on-demand: <code>cosine_similarity(query_row, all)</code></li>
+          <li>Exclude self + <strong>argsort(-scores) KHÔNG [::-1]</strong></li>
+          <li>Tính <code>shared_genres</code> cho explainability</li>
+          <li>Chạy <code>pytest tests/test_recommender.py::test_content_*</code></li>
+          <li>Verify Toy Story + Heat trên parquet</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>src/recommender_content.py</code> — điền TODO</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Tests C3 (missing title), C4 (exclude self) xanh</li>
+          <li>Toy Story → nhiều Animation/Children overlap</li>
+          <li>Heat → Action/Crime/Thriller overlap</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T06 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T06 · CF sparse utility matrix<span class="badge p1">D4–D5 · Phase 1 · START EARLY</span></div>
+        <div class="task-meta"><span>👤 <b>Loan</b></span><span>📅 D4–D5 CN–T2 27–28/07</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Build sparse CSR utility matrix (user × movie), save artifact cho CF. <b>Phải bắt đầu D4 (sớm hơn plan cũ 4 ngày)</b> để CF kịp app deadline 01/08.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Implement <code>build_utility_matrix(ratings)</code>: pandas category → codes → csr_matrix</li>
+          <li>Trả về <code>(utility, user_ids, movie_ids, user_to_row, movie_to_col)</code></li>
+          <li>Implement phần 1 của <code>scripts/build_cf_artifacts.py::main()</code></li>
+          <li>Load <code>ratings_clean.parquet</code></li>
+          <li>Save <code>utility_matrix.npz</code> + <code>movie_id_maps.pkl</code></li>
+          <li>In shape + density</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>src/recommender_cf.py</code> — <code>build_utility_matrix</code></li>
+          <li><code>scripts/build_cf_artifacts.py</code> — <code>main()</code> phần T06</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Artifact tồn tại, shape <code>(n_users, n_movies)</code>, density &lt; 1%</li>
+          <li>Không OOM</li>
+          <li><code>load_cf_artifacts()</code> trả CFModel đầy đủ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T07 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T07 · CF item-item similarity<span class="badge p1">D6 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Loan</b></span><span>📅 D6 T3 29/07</span><span>⏱ 1d</span></div>
+      </div>
+      <p class="task-desc">Tính item-item cosine similarity sparse, save artifact.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Implement <code>build_item_similarity(utility)</code>: <code>cosine_similarity(utility.T.tocsr(), dense_output=False)</code></li>
+          <li>Mở rộng <code>scripts/build_cf_artifacts.py::main()</code>: sau build utility → build item_sim</li>
+          <li>Save <code>item_similarity.npz</code></li>
+          <li>In shape + density + nonzero</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>src/recommender_cf.py</code> — <code>build_item_similarity</code></li>
+          <li><code>scripts/build_cf_artifacts.py</code> — <code>main()</code> phần T07</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Artifact sparse <code>(n_movies, n_movies)</code> tồn tại</li>
+          <li><code>load_cf_artifacts()</code> trả CFModel đầy đủ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T08 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T08 · CF recommend_for_user()<span class="badge p1">D6–D7 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Loan</b></span><span>📅 D6–D7 T3–T4 29–30/07</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Hàm recommendation cá nhân hóa theo userId. Hand-off cho Tân Dư wire tab CF cuối D7.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Verify <code>recommend_for_user(model, movies, user_id, top_k, min_rating=4.0)</code></li>
+          <li>Lấy các phim user đã rate ≥ <code>min_rating</code></li>
+          <li>Build sparse <code>liked_mask</code> (1 × n_movies)</li>
+          <li>Sparse matmul: <code>scores = (liked_mask @ item_similarity).toarray().ravel()</code></li>
+          <li>Mask phim đã seen = <code>-inf</code></li>
+          <li>Filter <code>unseen[scores &gt; 0]</code></li>
+          <li>Raise <code>KeyError</code> nếu user không có, <code>ValueError</code> nếu no liked/candidates</li>
+          <li>argpartition top-K + sort giảm dần</li>
+          <li>Chạy 4 tests CF: F1, F2, F3, F4</li>
+          <li>Manual smoke trên data thật: user 1, user 999999</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files</h4>
+        <ul>
+          <li><code>src/recommender_cf.py</code> — verify <code>recommend_for_user</code></li>
+          <li><code>tests/test_recommender.py</code> — 4 tests CF đang pass</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>4 tests CF (F1–F4) xanh</li>
+          <li>User 1 trả top-K không chứa phim đã rating</li>
+          <li>User 999999 raise KeyError</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T09 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T09 · App integration 3 tab + cold-start<span class="badge p1">D7–D8 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Tân Dư</b></span><span>📅 D7–D8 T4–T5 30–31/07</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Wire 3 recommender vào Streamlit. Cold-start fallback: user mới → Simple. App phải COMPLETE cuối D8.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Tab Simple: slider top_k + filter genre → <code>recommend_top_movies()</code></li>
+          <li>Tab Content: cached <code>build_content_model()</code> + <code>recommend_similar_movies()</code></li>
+          <li>Tab CF: cached <code>load_cf_cached()</code> + <code>recommend_for_user()</code></li>
+          <li>Try/except đa nhánh (KeyError + ValueError + Exception) → fallback Simple</li>
+          <li>Empty result → <code>st.info</code> + fallback Simple</li>
+          <li>Smoke test userId=1 + userId=999999 + "Toy Story (1995)"</li>
+          <li>Screenshot cho evidence</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>src/app.py</code> — wire 3 tab đầy đủ</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>3 tab chạy ổn định, fallback working</li>
+          <li>Evidence: 5 screenshot (1 mỗi tab + 2 fallback)</li>
+          <li>App COMPLETE cuối D8 (31/07)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T10 -->
+    <div class="task p1">
+      <div class="task-header">
+        <div class="task-id">T10 · Eval HR@10 / NDCG@10<span class="badge p1">D8–D9 · Phase 1</span></div>
+        <div class="task-meta"><span>👤 <b>Loan + Kiên</b></span><span>📅 D8–D9 T5–T6 31/07–01/08</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Leave-last-out split, build CF trên train, sample 200 user, recommend top-10, tính HR@10/NDCG@10. Deadline D9 cùng APP FREEZE.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Implement <code>scripts/run_evaluation.py::parse_args()</code> + <code>main()</code></li>
+          <li>Load processed → gọi <code>run_evaluation(ratings, movies, sample_size=200)</code></li>
+          <li>In table + save <code>reports/cf_eval_scores.csv</code></li>
+          <li>Điền số liệu vào <code>reports/cf_evaluation.md</code></li>
+          <li>Điền <code>notebooks/04_cf_experiments.ipynb</code> với sweep (sample, min_rating)</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files to implement</h4>
+        <ul>
+          <li><code>scripts/run_evaluation.py</code> — <code>parse_args</code> + <code>main</code></li>
+          <li><code>reports/cf_evaluation.md</code> — số thật</li>
+          <li><code>notebooks/04_cf_experiments.ipynb</code> — sweep</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li><code>python scripts/run_evaluation.py</code> chạy không crash</li>
+          <li>Bảng HR@10/NDCG@10 có số liệu (HR &gt; 0)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T11 -->
+    <div class="task freeze">
+      <div class="task-header">
+        <div class="task-id">T11 · Regression full + bug list · 🔒 APP FREEZE<span class="badge freeze">D9 · APP FREEZE</span></div>
+        <div class="task-meta"><span>👤 <b>Kiên</b></span><span>📅 D9 T6 01/08</span><span>⏱ 1d</span></div>
+      </div>
+      <p class="task-desc">Final regression trên môi trường hoàn chỉnh, mọi case P0/P1 xanh. <b>Sau khi report xanh → APP FREEZE, không thêm feature.</b></p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Verify all artifacts (parquet + CF artifacts) exist</li>
+          <li>Chạy <code>pytest tests/ -v --tb=short</code></li>
+          <li>Verify 10+ tests cũ xanh</li>
+          <li>Verify S3 mới xanh</li>
+          <li>Unskip D1/D2/D3 + A1/A2 khi artifact sẵn</li>
+          <li>Log mọi fail vào bug list</li>
+          <li>Cập nhật <code>reports/test_report.md</code> summary</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files</h4>
+        <ul>
+          <li><code>tests/</code> — toàn bộ</li>
+          <li><code>reports/test_report.md</code> — summary</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li><code>pytest tests/ -v</code> exit 0</li>
+          <li>Mọi case P0/P1 xanh</li>
+          <li><b>🔒 APP FREEZE cuối D9 01/08 23:59</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="color:#ca8a04; border-bottom:1px solid #fef3c7; padding-bottom:4px; margin-top:24px;">▌ Phase 2 — Report &amp; Ship (T12 → T14)</h3>
+
+    <!-- T12 -->
+    <div class="task p2">
+      <div class="task-header">
+        <div class="task-id">T12 · Final report (9 section) + overlap@K<span class="badge p2">D10–D11 · Phase 2</span></div>
+        <div class="task-meta"><span>👤 <b>Cả nhóm</b></span><span>📅 D10–D11 T7–CN 02–03/08</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Mỗi role điền 1 section trong <code>reports/final_report.md</code> (skeleton 9 section). + Genre overlap@K metric.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>§1 Intro, §6 Limitations, §7 Future, §9 Conclusion — Tân Dư</li>
+          <li>§2 Dataset &amp; preprocessing — Tâm</li>
+          <li>§3 Simple, §4 Content (+ overlap@K) — Duong</li>
+          <li>§5 CF, §5.1 Eval HR@10/NDCG@10 — Loan</li>
+          <li>§8 Test &amp; Evaluation — Kiên</li>
+          <li>Implement <code>genre_overlap_at_k()</code> trong <code>recommender_content.py</code></li>
+          <li>Tính overlap@K cho 5 phim: Toy Story, Heat, Pulp Fiction, Matrix, Inception</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files</h4>
+        <ul>
+          <li><code>reports/final_report.md</code> — 9 section đầy đủ</li>
+          <li><code>src/recommender_content.py</code> — thêm <code>genre_overlap_at_k</code></li>
+          <li><code>notebooks/03_modeling.ipynb</code> — bảng overlap@K</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>9 section điền đầy đủ, có số liệu thật</li>
+          <li>Reference đúng PDF mục tương ứng</li>
+          <li>Có bảng overlap@K 5 phim</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T13 -->
+    <div class="task p2">
+      <div class="task-header">
+        <div class="task-id">T13 · Charts/analysis notebook + slides<span class="badge p2">D11–D12 · Phase 2</span></div>
+        <div class="task-meta"><span>👤 <b>Loan, Kiên, Tân Dư</b></span><span>📅 D11–D12 CN–T2 03–04/08</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Vẽ chart phân tích + outline slide cho demo 10 phút.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>Notebook 05: load <code>cf_eval_scores.csv</code></li>
+          <li>3 chart: HR@10 theo top_k, NDCG@10 theo top_k, rating distribution</li>
+          <li>Slide outline (10 phút, mỗi role 1 phút)</li>
+          <li>Screenshot 3 tab app cho slide</li>
+          <li>5–7 slide tổng</li>
+        </ul>
+      </div>
+      <div class="files">
+        <h4>📄 Files</h4>
+        <ul>
+          <li><code>notebooks/05_evaluation_analysis.ipynb</code> — 3 chart</li>
+          <li><code>reports/slides_outline.md</code> — outline + script</li>
+          <li><code>reports/screenshots/</code> — 5 screenshot</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Notebook có ≥ 3 chart</li>
+          <li>Slide outline rõ ràng, có script từng slide</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- T14 -->
+    <div class="task p2">
+      <div class="task-header">
+        <div class="task-id">T14 · Rehearsal + ship<span class="badge p2">D13–D14 · Phase 2 · SHIP</span></div>
+        <div class="task-meta"><span>👤 <b>Cả nhóm</b></span><span>📅 D13–D14 T3–T4 05–06/08</span><span>⏱ 1.5d</span></div>
+      </div>
+      <p class="task-desc">Polish, cross-review, demo 10 phút, nộp bản cuối.</p>
+      <div class="subcheck">
+        <h4>✔ Sub-task checklist</h4>
+        <ul>
+          <li>D13: Polish + cross-review report</li>
+          <li>D13: Sửa typo / số liệu sai</li>
+          <li>D14: Demo 3 tab Streamlit trên máy lead</li>
+          <li>D14: Mỗi role nói 1 phút về phần mình</li>
+          <li>D14: Q&amp;A nội bộ</li>
+          <li>D14: Nộp bản cuối (code + report + slide)</li>
+        </ul>
+      </div>
+      <div class="accept">
+        <h4>✓ Acceptance</h4>
+        <ul>
+          <li>Demo 10 phút ổn, không crash</li>
+          <li>Bản nộp cuối có: code + report + slide + artifacts</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- DoD -->
+  <section>
+    <h2>✅ Definition of Done (9 criteria, spec §14)</h2>
+    <ul class="dod">
+      <li>Tài liệu mô tả rõ 3 phương pháp</li>
+      <li>Pipeline xử lý movies.csv + ratings.csv</li>
+      <li>Simple top-K theo weighted_rating</li>
+      <li>Content similar + genre explain</li>
+      <li>CF theo userId, không gồm phim đã rating</li>
+      <li>Cold-start → fallback Simple</li>
+      <li>Streamlit 3 tab</li>
+      <li>Test report + eval HR@10/NDCG@10</li>
+      <li>Không OOM (sparse + artifacts)</li>
+    </ul>
+  </section>
+
+  <!-- RISKS -->
+  <section>
+    <h2>⚠️ Risks &amp; Mitigation</h2>
+    <div class="risk"><b>ratings.csv 647MB → OOM</b> · dtype <code>int32/float32</code>, sparse matrix, sample khi dev</div>
+    <div class="risk"><b>Pivot dense → crash</b> · <code>scipy.sparse.csr_matrix</code>, không bao giờ dense</div>
+    <div class="risk"><b>User mới không có rating</b> · Fallback Simple Recommender</div>
+    <div class="risk"><b>T03 trễ → block 6 task</b> · HARD deadline D3, Tâm focus 1 mình</div>
+    <div class="risk"><b>CF compress 6 ngày (T06→T08)</b> · Loan start T06 từ D4 (sớm hơn), parallel T07+T08</div>
+    <div class="risk"><b>App không xong 01/08</b> · Buffer D8–D9, Tân Dư + Loan phối hợp tight, không scope creep</div>
+  </section>
+
+  <footer>
+    Movie Recommendation System · Sprint Plan v3.0 · App freeze 01/08 · 22/07/2026
+  </footer>
+
+</div>
+</body>
+</html>

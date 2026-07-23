@@ -1,0 +1,15 @@
+Card Name,List Name,Members,Start Date,Due Date,Labels,Description
+[T01] Setup môi trường + onboard,Chưa làm,Tân Dư;Trần Hoàng Minh Tâm,2026-07-24,2026-07-24,setup;lead;data,Repo + venv + dataset check + role files + board
+[T02] EDA movies + ratings,Chưa làm,Trần Hoàng Minh Tâm,2026-07-25,2026-07-25,data;eda,Notebooks 01 02 schema sparsity genre duplicate
+[T03] Clean → parquet + data dictionary,Chưa làm,Trần Hoàng Minh Tâm,2026-07-26,2026-07-26,data,parquet + filter user>=20 movie>=50 + data-dictionary.md
+[T04] Simple Recommender (weighted rating),Chưa làm,tran Duong,2026-07-27,2026-07-28,model,IMDb WR top-K
+[T05] Content-based Recommender (genre cosine),Chưa làm,tran Duong,2026-07-27,2026-07-28,model,CountVectorizer sparse cosine exclude self
+[T06] CF utility matrix,Chưa làm,18- Thanh Loan,2026-07-27,2026-07-28,pipeline;cf,csr_matrix user x movie save utility.npz
+[T07] CF item similarity,Chưa làm,18- Thanh Loan,2026-07-29,2026-07-29,pipeline;cf,save item_similarity.npz
+[T08] CF recommend_for_user(),Chưa làm,18- Thanh Loan,2026-07-29,2026-07-30,pipeline;cf,Top-K userId sparse matmul exclude seen raise signals
+[T09] App integration 3 tab + cold-start,Chưa làm,Tân Dư,2026-07-30,2026-07-31,lead;demo,3 tab app.py fallback Simple user mới
+[T10] Eval HR@10 / NDCG@10,Chưa làm,18- Thanh Loan;Hoàng Đức Kiên,2026-07-31,2026-08-01,qa;cf,Leave-last-out sample 200 charts
+[T11] Regression full + bug list,Chưa làm,Hoàng Đức Kiên,2026-08-01,2026-08-01,qa,LOCK APP FREEZE full regression P0 P1 xanh
+[T12] Final report (9 section) + overlap@K,Chưa làm,Tân Dư;Trần Hoàng Minh Tâm;tran Duong;18- Thanh Loan;Hoàng Đức Kiên,2026-08-02,2026-08-03,docs,Mỗi role 1 section overlap@K metric
+[T13] Charts/analysis notebook + slides,Chưa làm,18- Thanh Loan;Hoàng Đức Kiên;Tân Dư,2026-08-03,2026-08-04,docs;demo,Notebook 05 slide outline screenshots
+[T14] Rehearsal + ship,Chưa làm,Tân Dư;Trần Hoàng Minh Tâm;tran Duong;18- Thanh Loan;Hoàng Đức Kiên,2026-08-05,2026-08-06,demo,Demo 10 phút polish nộp cuối
