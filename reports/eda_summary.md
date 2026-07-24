@@ -6,8 +6,8 @@ Owner: Data Engineer · Status: draft
 
 | File | Rows | Notes |
 |------|------|-------|
-| movies.csv | TBD | |
-| ratings.csv | TBD | ~678MB |
+| movies.csv | 62423 | |
+| ratings.csv | 25000095 | ~678MB |
 
 ## After clean
 
@@ -18,6 +18,6 @@ Owner: Data Engineer · Status: draft
 
 ## Key findings
 
-- Sparsity:
-- Rating mean (C):
-- Genre notes:
+- Sparsity: 0.9973951609474271
+- Rating mean (C): 3.5338545
+- Genre notes: 19
