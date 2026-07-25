@@ -6,13 +6,10 @@ Owner: Data Engineer · Status: edited
 
 | File | Rows | Notes |
 |------|------|-------|
-<<<<<<< Updated upstream
-| movies.csv | TBD | |
-| ratings.csv | TBD | ~678MB |
-=======
 | movies.csv | 62,423 | |
 | ratings.csv | 25,000,095 | ~678MB |
->>>>>>> Stashed changes
+
+
 
 ## After clean
 
@@ -23,13 +20,7 @@ Owner: Data Engineer · Status: edited
 | ratings_content.parquet | 24,945,390 | user≥20, movie≥5 |
 
 ## Key findings
-
-<<<<<<< Updated upstream
-- Sparsity:
-- Rating mean (C):
-- Genre notes:
-=======
 - Sparsity:  0.9973951609474271 / ~0.995307 (cd)/ ~0.98847(content)
 - Rating mean (C):3.5338545
 - Genre notes: 19 (giữ nguyên sau cleaned)
->>>>>>> Stashed changes
+
