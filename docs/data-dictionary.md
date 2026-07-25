@@ -1,6 +1,6 @@
-# Data Dictionary (draft)
+# Data Dictionary (edited)
 
-Cập nhật bởi **Data Engineer** sau khi EDA xong.
+Cập nhật bởi **Data Engineer**.
 
 ## movies.csv (raw)
 
@@ -30,7 +30,7 @@ Cập nhật bởi **Data Engineer** sau khi EDA xong.
 | genres_list | list[str] |
 | genres_text | space-separated cho vectorizer |
 
-## ratings_clean.parquet (target)
+## ratings_clean.parquet và ratings_cf.parquet (target)
 
 | Column | Meaning |
 |--------|---------|
@@ -39,9 +39,12 @@ Cập nhật bởi **Data Engineer** sau khi EDA xong.
 | rating | float32 |
 | timestamp | int64 |
 
-### Filter đề xuất (có thể chỉnh)
-
+### Filter 
+ratings_cf.parquet
 - Giữ user ≥ 20 ratings
 - Giữ movie ≥ 50 ratings
+ratings_content.parquet
+- Giữ user ≥ 20 ratings
+- Giữ movie ≥ 5 ratings
 
 Ghi lại số row trước/sau filter vào `reports/eda_summary.md`.
