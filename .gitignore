@@ -14,9 +14,6 @@ venv/
 data/raw/*.csv
 data/raw/*.zip
 data/processed/*.parquet
-!data/processed/movies_clean.parquet
-!data/processed/ratings_cf.parquet
-!data/processed/ratings_content.parquet
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
