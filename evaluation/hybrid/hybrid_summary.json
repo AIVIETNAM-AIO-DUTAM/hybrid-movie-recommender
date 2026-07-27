@@ -1,0 +1,57 @@
+[
+    {
+        "model": "HYBRID",
+        "alpha": 0.5,
+        "top_k": 10,
+        "evaluated_users": 100,
+        "precision@10": 0.038000000000000006,
+        "recall@10": 0.03889665257910746,
+        "hit_rate@10": 0.22,
+        "average_matches": 0.38,
+        "average_truth_items": 13.01
+    },
+    {
+        "model": "HYBRID",
+        "alpha": 0.6,
+        "top_k": 10,
+        "evaluated_users": 100,
+        "precision@10": 0.063,
+        "recall@10": 0.0844274967349516,
+        "hit_rate@10": 0.36,
+        "average_matches": 0.63,
+        "average_truth_items": 13.01
+    },
+    {
+        "model": "HYBRID",
+        "alpha": 0.7,
+        "top_k": 10,
+        "evaluated_users": 100,
+        "precision@10": 0.075,
+        "recall@10": 0.09876056001313685,
+        "hit_rate@10": 0.44,
+        "average_matches": 0.75,
+        "average_truth_items": 13.01
+    },
+    {
+        "model": "HYBRID",
+        "alpha": 0.8,
+        "top_k": 10,
+        "evaluated_users": 100,
+        "precision@10": 0.07600000000000001,
+        "recall@10": 0.10496444769873184,
+        "hit_rate@10": 0.44,
+        "average_matches": 0.76,
+        "average_truth_items": 13.01
+    },
+    {
+        "model": "HYBRID",
+        "alpha": 0.9,
+        "top_k": 10,
+        "evaluated_users": 100,
+        "precision@10": 0.07300000000000001,
+        "recall@10": 0.10373339311473607,
+        "hit_rate@10": 0.44,
+        "average_matches": 0.73,
+        "average_truth_items": 13.01
+    }
+]
