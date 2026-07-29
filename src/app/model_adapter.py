@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 import joblib
@@ -22,12 +23,14 @@ from hybrid_rcm import (
 )
 
 
-DATA_DIR = ROOT / "data" / "processed"
+DATA_DIR = Path(
+    os.getenv("REC_DATA_DIR", ROOT / "data" / "processed")
+)
 MOVIES_PATH = DATA_DIR / "movies_clean.parquet"
 RATINGS_PATH = DATA_DIR / "ratings_cf.parquet"
 TRAIN_RATINGS_PATH = DATA_DIR / "rating_cf_train.parquet"
 
-MODEL_DIR = ROOT / "model"
+MODEL_DIR = Path(os.getenv("REC_MODEL_DIR", ROOT / "model"))
 CF_MODEL_DIR = MODEL_DIR / "knn_cf"
 CONTENT_MODEL_DIR = MODEL_DIR / "knn_content"
 
