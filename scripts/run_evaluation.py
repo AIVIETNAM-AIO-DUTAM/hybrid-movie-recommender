@@ -1,33 +1,3 @@
-"""CLI entrypoint — run CF evaluation (HR@10 / NDCG@10).
-
-Owner: 18- Thanh Loan + Hoàng Đức Kiên — Task T19.
-
-What this script does
----------------------
-1. Load `data/processed/{movies,ratings}_clean.parquet`
-2. Run `evaluation.run_evaluation(ratings, movies, sample_size=200)`
-   which does leave-last-out split, builds CF on train, evaluates HR@10/NDCG@10
-   on a random sample of 200 users.
-3. Print results table to stdout
-4. Save CSV to `reports/cf_eval_scores.csv` so QA can chart it in
-   `notebooks/05_evaluation_analysis.ipynb`
-
-Usage
------
-    source .venv/bin/activate
-    python scripts/run_evaluation.py
-    # or with a different sample size:
-    python scripts/run_evaluation.py --sample-size 500
-
-Acceptance (Task T19)
----------------------
-- Exit code 0
-- `reports/cf_eval_scores.csv` exists with columns:
-    users_evaluated, HR@10, NDCG@10
-- HR@10 > 0 (CF is at least better than random)
-- Wall-clock < 5 minutes on the dev machine (with sample_size=200)
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -38,11 +8,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-REPORTS_DIR = ROOT / "reports"
+EVAL_DIR = ROOT / "evaluation"
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse CLI args. TODO Loan: implement (use argparse)."""
+    """Parse CLI args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--sample-size",
@@ -60,27 +30,53 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    """Run evaluation and save scores.
+    """Run evaluation and save scores."""
+    args = parse_args()
+    
+    # Import các hàm cần thiết từ src
+    from data_processing import load_processed
+    from evaluation import run_evaluation
 
-    TODO Loan + Kiên: implement T19. Suggested steps:
-        1. args = parse_args()
-        2. from data_processing import load_processed
-        3. from evaluation import run_evaluation
-        4. movies, ratings = load_processed()
-        5. t0 = time.time()
-        6. scores = run_evaluation(
-              ratings, movies,
-              sample_size=args.sample_size,
-              top_k=args.top_k,
-           )
-        7. print scores.to_string(index=False)
-        8. print elapsed time
-        9. REPORTS_DIR.mkdir(exist_ok=True)
-       10. scores.to_csv(REPORTS_DIR / "cf_eval_scores.csv", index=False)
-       11. Append row to reports/cf_evaluation.md (date, sample, HR, NDCG)
-    """
-    raise NotImplementedError("TODO Loan + Kiên: implement T19 evaluation runner")
+    # Load dữ liệu đã xử lý
+    print("Đang load dữ liệu đã xử lý...")
+    # Load dữ liệu đã xử lý (dùng dấu * để hứng toàn bộ các giá trị trả về)
+    print("Đang load dữ liệu đã xử lý...")
+    loaded_data = load_processed()
+    movies = loaded_data[0]
+    ratings = loaded_data[1]
 
+    # Đo thời gian thực thi
+    t0 = time.time()
 
+    # Chạy evaluation
+    print(f"Đang chạy đánh giá mô hình với sample_size={args.sample_size}, top_k={args.top_k}...")
+    scores = run_evaluation(
+        ratings, movies,
+        sample_size=args.sample_size,
+        top_k=args.top_k,
+    )
+
+    elapsed = time.time() - t0
+
+    # In kết quả ra stdout
+    # In kết quả ra stdout
+    print("\n--- KẾT QUẢ ĐÁNH GIÁ COLLABORATIVE FILTERING ---")
+    print(scores.to_string(index=False))
+    
+    # In thời gian hoàn thành
+    print(f"\nHoàn thành đánh giá trong {elapsed:.2f} giây.")
+
+    REPORTS_DIR = ROOT / "reports"
+    # REPORTS_DIR = ROOT / "evaluation"
+
+    # Đảm bảo thư mục tồn tại
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    EVAL_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Lưu file CSV vào thư mục evaluation
+    csv_path = EVAL_DIR / "cf_eval_scores.csv"
+    scores.to_csv(csv_path, index=False)
+    print(f"Đã lưu kết quả CSV tại: {csv_path}")
 if __name__ == "__main__":
     main()
