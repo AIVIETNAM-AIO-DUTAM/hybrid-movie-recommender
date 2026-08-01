@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.python-version
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (large files — keep placeholders only)
+data/raw/*.csv
+data/raw/*.zip
+data/processed/*.parquet
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Model artifacts (regenerate locally)
+artifacts/*.npz
+artifacts/*.pkl
+artifacts/*.joblib
+!artifacts/.gitkeep
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Reports with secrets or personal notes (optional keep)
+# reports/*.md
+
+# Generated charts (regenerate from notebooks)
+reports/charts/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Eval CSV (regenerate)
+reports/cf_eval_scores.csv
+model/
