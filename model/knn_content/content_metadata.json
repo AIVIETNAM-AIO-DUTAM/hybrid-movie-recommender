@@ -1,0 +1,24 @@
+{
+    "model_name": "KNN Content-Based",
+    "model_type": "NearestNeighbors",
+    "metric": "cosine",
+    "algorithm": "brute",
+    "number_of_movies": 62423,
+    "number_of_features": 26444,
+    "number_of_nonzero_values": 387982,
+    "feature_source": [
+        "clean_title",
+        "genres_text",
+        "genres_text"
+    ],
+    "tfidf_parameters": {
+        "stop_words": "english",
+        "ngram_range": [
+            1,
+            2
+        ],
+        "min_df": 2,
+        "max_features": 30000,
+        "norm": "l2"
+    }
+}

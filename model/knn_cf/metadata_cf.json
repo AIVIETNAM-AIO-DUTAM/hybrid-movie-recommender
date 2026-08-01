@@ -1,0 +1,18 @@
+{
+    "model_name": "Item-Based KNN Collaborative Filtering",
+    "model_type": "NearestNeighbors",
+    "metric": "cosine",
+    "algorithm": "brute",
+    "n_neighbors": 20,
+    "num_movies": 13172,
+    "num_users": 162242,
+    "num_train_ratings": 19773878,
+    "num_test_ratings": 4865534,
+    "matrix_shape": [
+        13172,
+        162242
+    ],
+    "matrix_nonzero_values": 19773878,
+    "test_ratio": 0.2,
+    "positive_rating_threshold": 4.0
+}
