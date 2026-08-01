@@ -40,3 +40,4 @@ reports/charts/
 
 # Eval CSV (regenerate)
 reports/cf_eval_scores.csv
+model/
