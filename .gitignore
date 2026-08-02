@@ -18,10 +18,10 @@ data/processed/*.parquet
 !data/processed/.gitkeep
 
 # Model artifacts (regenerate locally)
-artifacts/*.npz
-artifacts/*.pkl
-artifacts/*.joblib
-!artifacts/.gitkeep
+*.joblib
+*.npz
+*.pkl
+*.parquet
 
 # OS / IDE
 .DS_Store
