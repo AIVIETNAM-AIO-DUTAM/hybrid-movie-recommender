@@ -1,72 +1,64 @@
-"""Streamlit app smoke tests — owned by QA (Kiên).
-
-Cases A1-A2 cover Task T09/T13/T20 deliverables. Lightweight checks:
-imports succeed and the 3-tab entry path handles missing data cleanly.
-
-For full UX testing, do manual smoke testing in the browser:
-
-    streamlit run src/app.py
-
-Reference: src/app.py
-"""
-
 from __future__ import annotations
 
+import importlib
 import sys
 from pathlib import Path
 
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT))
+SRC_DIR = ROOT / "src"
+FIXTURE_DATA_DIR = ROOT / "tests" / "fixtures" / "data" / "processed"
+FIXTURE_MODEL_DIR = ROOT / "tests" / "fixtures" / "model"
 
 
-def test_a1_missing_data_warns_cleanly(monkeypatch):
-    """A1: when parquet is missing, app shows a warning — no traceback."""
-    pytest.importorskip("streamlit")
-    from streamlit.testing.v1 import AppTest
+def _reload_app_modules(monkeypatch):
+    monkeypatch.setenv("REC_DATA_DIR", str(FIXTURE_DATA_DIR))
+    monkeypatch.setenv("REC_MODEL_DIR", str(FIXTURE_MODEL_DIR))
 
-    # Point ROOT's processed path at an empty temp tree via monkeypatch on
-    # the Path.exists check used inside app.main. Easiest reliable approach:
-    # run the app after temporarily renaming the expected parquet via env-
-    # independent monkeypatch of Path.exists for that specific file.
-    processed = ROOT / "data" / "processed" / "movies_clean.parquet"
-    original_exists = Path.exists
+    if str(SRC_DIR) not in sys.path:
+        sys.path.insert(0, str(SRC_DIR))
 
-    def fake_exists(self: Path) -> bool:
-        if self.resolve() == processed.resolve():
-            return False
-        return original_exists(self)
-
-    monkeypatch.setattr(Path, "exists", fake_exists)
-
-    at = AppTest.from_file(str(ROOT / "src" / "app.py"), default_timeout=15).run()
-    assert not at.exception
-    warning_text = " ".join(w.value for w in at.warning).lower()
-    assert "parquet" in warning_text
+    for module_name in ["app.streamlit_app", "app.model_adapter"]:
+        sys.modules.pop(module_name, None)
 
 
-def test_a2_three_tabs_render():
-    """A2: app exposes 3 tabs — Simple / Content / CF."""
-    pytest.importorskip("streamlit")
-    from streamlit.testing.v1 import AppTest
+def test_a1_model_adapter_predicts_from_fixture(monkeypatch):
+    _reload_app_modules(monkeypatch)
 
-    processed = ROOT / "data" / "processed" / "movies_clean.parquet"
-    fixture = ROOT / "tests" / "fixtures" / "data" / "processed" / "movies_clean.parquet"
-    if not processed.exists() and not fixture.exists():
-        pytest.skip(
-            "Parquet missing — run `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` "
-            "or `python tests/fixtures/build_test_assets.py` first."
-        )
+    model_adapter = importlib.import_module("app.model_adapter")
+    movies, ratings = model_adapter.load_data()
+    recommendations = model_adapter.predict(
+        user_id=1,
+        movies=movies,
+        ratings=ratings,
+        top_k=3,
+    )
 
-    # App hard-codes data/processed; skip A2 when only fixtures exist.
-    if not processed.exists():
-        pytest.skip("Full processed parquet required for A2 tab render smoke.")
+    required_columns = {
+        "rank",
+        "movieId",
+        "title",
+        "genres",
+        "rating",
+        "num_ratings",
+        "model_score",
+    }
+    user_seen = set(
+        ratings.loc[ratings["userId"] == 1, "movieId"].astype(int)
+    )
 
-    at = AppTest.from_file(str(ROOT / "src" / "app.py"), default_timeout=60).run()
-    assert not at.exception
-    tab_labels = [t.label for t in at.tabs]
-    assert "Simple Recommender" in tab_labels
-    assert "Content-based" in tab_labels
-    assert "Collaborative Filtering" in tab_labels
+    assert required_columns <= set(recommendations.columns)
+    assert len(recommendations) == 3
+    assert recommendations["rank"].tolist() == [1, 2, 3]
+    assert set(recommendations["movieId"].astype(int)).isdisjoint(user_seen)
+    assert recommendations["model_score"].is_monotonic_decreasing
+
+
+def test_a2_streamlit_app_imports_current_layout(monkeypatch):
+    _reload_app_modules(monkeypatch)
+
+    streamlit_app = importlib.import_module("app.streamlit_app")
+
+    assert hasattr(streamlit_app, "render_result_rows")
+    assert hasattr(streamlit_app, "render_context")
+    assert hasattr(streamlit_app, "main")

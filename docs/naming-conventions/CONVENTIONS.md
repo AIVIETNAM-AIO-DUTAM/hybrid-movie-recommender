@@ -268,10 +268,11 @@ Metric naming:
 
 | Hạng mục | Quy ước | Ví dụ |
 | --- | --- | --- |
-| File app | `src/app.py` | `streamlit run src/app.py` |
-| Tab label | ngắn, đúng domain | `Simple`, `Content-based`, `Collaborative Filtering` |
+| File app | `src/app/streamlit_app.py` | `streamlit run src/app/streamlit_app.py` |
+| Model adapter | `src/app/model_adapter.py` | `predict(user_id, movies, ratings, top_k)` |
+| View label | ngắn, đúng domain | `Recommend`, `Context` |
 | Session state key | `snake_case` | `selected_movie_id`, `selected_user_id` |
-| Cached function | động từ + đối tượng | `load_processed_data()`, `load_cf_artifacts()` |
+| Cached function | động từ + đối tượng | `load_data()`, `load_hybrid_artifacts()` |
 
 Quy tắc:
 

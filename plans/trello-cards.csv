@@ -7,7 +7,7 @@ Card Name,List Name,Members,Start Date,Due Date,Labels,Description
 [T06] CF utility matrix,Chưa làm,18- Thanh Loan,2026-07-27,2026-07-28,pipeline;cf,csr_matrix user x movie save utility.npz
 [T07] CF item similarity,Chưa làm,18- Thanh Loan,2026-07-29,2026-07-29,pipeline;cf,save item_similarity.npz
 [T08] CF recommend_for_user(),Chưa làm,18- Thanh Loan,2026-07-29,2026-07-30,pipeline;cf,Top-K userId sparse matmul exclude seen raise signals
-[T09] App integration 3 tab + cold-start,Chưa làm,Tân Dư,2026-07-30,2026-07-31,lead;demo,3 tab app.py fallback Simple user mới
+[T09] App integration Hybrid Recommend,Chưa làm,Tân Dư,2026-07-30,2026-07-31,lead;demo,streamlit_app.py + model_adapter.py
 [T10] Eval HR@10 / NDCG@10,Chưa làm,18- Thanh Loan;Hoàng Đức Kiên,2026-07-31,2026-08-01,qa;cf,Leave-last-out sample 200 charts
 [T11] Regression full + bug list,Chưa làm,Hoàng Đức Kiên,2026-08-01,2026-08-01,qa,LOCK APP FREEZE full regression P0 P1 xanh
 [T12] Final report (9 section) + overlap@K,Chưa làm,Tân Dư;Trần Hoàng Minh Tâm;tran Duong;18- Thanh Loan;Hoàng Đức Kiên,2026-08-02,2026-08-03,docs,Mỗi role 1 section overlap@K metric

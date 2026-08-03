@@ -22,7 +22,7 @@ Timeline cũ cho Loan 7 ngày (tuần 2). Timeline mới compress còn **6 ngày
 - [ ] Có mặt họp kickoff
 - [ ] Đọc `src/recommender_cf.py` (signature đã có, fix P0/P1 đã apply)
 - [ ] Đọc `src/evaluation.py` (đã có `run_evaluation` + `prepare_eval`/`evaluate` split)
-- [ ] Đọc `scripts/build_cf_artifacts.py` + `scripts/run_evaluation.py` (stub)
+- [ ] Đọc `scripts/build_cf_artifacts.py` + `scripts/run_evaluation.py`
 
 ### D4–D5 CN–T2 27–28/07 — T06 Sparse utility matrix **(START EARLY)**
 
@@ -34,7 +34,7 @@ Timeline cũ cho Loan 7 ngày (tuần 2). Timeline mới compress còn **6 ngày
   - build `csr_matrix((data, (rows, cols)))`
   - trả về `(utility, user_ids, movie_ids, user_to_row, movie_to_col)`
 - [ ] Implement phần 1 của `scripts/build_cf_artifacts.py::main()`:
-  - load `ratings_clean.parquet`
+  - load `ratings_cf.parquet`
   - build utility → save `utility_matrix.npz` + `movie_id_maps.pkl`
   - in shape + density
 

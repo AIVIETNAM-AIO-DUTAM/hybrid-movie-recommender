@@ -29,7 +29,7 @@
 | `[T06] CF utility matrix` | Chưa làm | 18- Thanh Loan | 2026-07-27 | 2026-07-28 | 1.5d | pipeline;cf | csr_matrix user×movie; save utility.npz + maps.pkl |
 | `[T07] CF item-item similarity` | Chưa làm | 18- Thanh Loan | 2026-07-29 | 2026-07-29 | 1d | pipeline;cf | cosine_similarity sparse; save item_similarity.npz |
 | `[T08] CF recommend_for_user()` | Chưa làm | 18- Thanh Loan | 2026-07-29 | 2026-07-30 | 1.5d | pipeline;cf | Top-K userId; sparse matmul; exclude seen; raise KeyError/ValueError |
-| `[T09] App integration 3 tab + cold-start` | Chưa làm | Tân Dư | 2026-07-30 | 2026-07-31 | 1.5d | lead;demo | Wire 3 tab app.py; fallback Simple cho user mới |
+| `[T09] App integration Hybrid Recommend` | Chưa làm | Tân Dư | 2026-07-30 | 2026-07-31 | 1.5d | lead;demo | Wire src/app/streamlit_app.py + model_adapter.py |
 | `[T10] Eval HR@10 / NDCG@10` | Chưa làm | 18- Thanh Loan;Hoàng Đức Kiên | 2026-07-31 | 2026-08-01 | 1.5d | qa;cf | Leave-last-out sample 200; report + charts |
 | `[T11] Regression full + bug list` | Chưa làm | Hoàng Đức Kiên | 2026-08-01 | 2026-08-01 | 1d | qa | **🔒 APP FREEZE** · Full regression P0/P1 xanh |
 

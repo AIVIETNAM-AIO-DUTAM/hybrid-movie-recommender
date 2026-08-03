@@ -183,7 +183,7 @@
       <div class="phase p1">
         <h3>Phase 1 — App Build</h3>
         <div class="dates">T5 24/07 → T6 01/08 (9 ngày)</div>
-        <div class="goal">Parquet + Simple + Content + CF + Demo 3 tab + Eval + Regression</div>
+        <div class="goal">Parquet + Simple + Content + CF + Hybrid Recommend App + Eval + Regression</div>
         <div class="tasks">T01 → T11</div>
         <div class="deadline">🔒 APP FREEZE cuối D9 01/08</div>
       </div>
@@ -612,33 +612,34 @@ C = mean toàn dataset, m = quantile(0.80)</div>
     <!-- T09 -->
     <div class="task p1">
       <div class="task-header">
-        <div class="task-id">T09 · App integration 3 tab + cold-start<span class="badge p1">D7–D8 · Phase 1</span></div>
+        <div class="task-id">T09 · App integration Hybrid Recommend<span class="badge p1">D7–D8 · Phase 1</span></div>
         <div class="task-meta"><span>👤 <b>Tân Dư</b></span><span>📅 D7–D8 T4–T5 30–31/07</span><span>⏱ 1.5d</span></div>
       </div>
-      <p class="task-desc">Wire 3 recommender vào Streamlit. Cold-start fallback: user mới → Simple. App phải COMPLETE cuối D8.</p>
+      <p class="task-desc">Wire Hybrid Recommender vào Streamlit qua model adapter. App phải COMPLETE cuối D8.</p>
       <div class="subcheck">
         <h4>✔ Sub-task checklist</h4>
         <ul>
-          <li>Tab Simple: slider top_k + filter genre → <code>recommend_top_movies()</code></li>
-          <li>Tab Content: cached <code>build_content_model()</code> + <code>recommend_similar_movies()</code></li>
-          <li>Tab CF: cached <code>load_cf_cached()</code> + <code>recommend_for_user()</code></li>
-          <li>Try/except đa nhánh (KeyError + ValueError + Exception) → fallback Simple</li>
-          <li>Empty result → <code>st.info</code> + fallback Simple</li>
-          <li>Smoke test userId=1 + userId=999999 + "Toy Story (1995)"</li>
+          <li>UI chọn/nhập user id, chọn top_k, nhấn Predict</li>
+          <li>Bảng kết quả: rank, title, genres, rating, model score</li>
+          <li>Context hiển thị rating history theo timestamp giảm dần</li>
+          <li>Load artifact qua <code>src/app/model_adapter.py</code></li>
+          <li>Empty result → message rõ, không crash UI</li>
+          <li>Smoke test userId=1 + userId=999999 + top_k khác nhau</li>
           <li>Screenshot cho evidence</li>
         </ul>
       </div>
       <div class="files">
         <h4>📄 Files to implement</h4>
         <ul>
-          <li><code>src/app.py</code> — wire 3 tab đầy đủ</li>
+          <li><code>src/app/streamlit_app.py</code> — giao diện Streamlit</li>
+          <li><code>src/app/model_adapter.py</code> — adapter gọi model</li>
         </ul>
       </div>
       <div class="accept">
         <h4>✓ Acceptance</h4>
         <ul>
-          <li>3 tab chạy ổn định, fallback working</li>
-          <li>Evidence: 5 screenshot (1 mỗi tab + 2 fallback)</li>
+          <li>App Recommend chạy ổn định, không crash</li>
+          <li>Evidence: screenshot kết quả + context</li>
           <li>App COMPLETE cuối D8 (31/07)</li>
         </ul>
       </div>
@@ -766,7 +767,7 @@ C = mean toàn dataset, m = quantile(0.80)</div>
           <li>Notebook 05: load <code>cf_eval_scores.csv</code></li>
           <li>3 chart: HR@10 theo top_k, NDCG@10 theo top_k, rating distribution</li>
           <li>Slide outline (10 phút, mỗi role 1 phút)</li>
-          <li>Screenshot 3 tab app cho slide</li>
+          <li>Screenshot app Recommend cho slide</li>
           <li>5–7 slide tổng</li>
         </ul>
       </div>
@@ -799,7 +800,7 @@ C = mean toàn dataset, m = quantile(0.80)</div>
         <ul>
           <li>D13: Polish + cross-review report</li>
           <li>D13: Sửa typo / số liệu sai</li>
-          <li>D14: Demo 3 tab Streamlit trên máy lead</li>
+          <li>D14: Demo app Recommend Streamlit trên máy lead</li>
           <li>D14: Mỗi role nói 1 phút về phần mình</li>
           <li>D14: Q&amp;A nội bộ</li>
           <li>D14: Nộp bản cuối (code + report + slide)</li>
@@ -825,7 +826,7 @@ C = mean toàn dataset, m = quantile(0.80)</div>
       <li>Content similar + genre explain</li>
       <li>CF theo userId, không gồm phim đã rating</li>
       <li>Cold-start → fallback Simple</li>
-      <li>Streamlit 3 tab</li>
+      <li>Streamlit Recommend app: user id, top_k, results, context</li>
       <li>Test report + eval HR@10/NDCG@10</li>
       <li>Không OOM (sparse + artifacts)</li>
     </ul>
