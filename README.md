@@ -1,86 +1,405 @@
-# Movie Recommendation System (Module 2)
+# Hybrid Movie Recommender System
 
-Hệ thống gợi ý phim trong **2 tuần** — 3 phương pháp:
+> **End-to-end movie recommendation prototype.** Project xây dựng hệ thống gợi ý phim từ MovieLens 25M, gồm preprocessing, recommender models, hybrid scoring, evaluation, automated tests và Streamlit demo. Mục tiêu là chứng minh một luồng recommender hoàn chỉnh: **raw data -> processed parquet -> model artifacts -> hybrid recommendations -> app demo -> QA evidence**.
 
-1. **Simple Recommender** — top phim theo weighted rating (cold-start)
-2. **Content-based** — phim tương tự theo genre
-3. **Collaborative Filtering** — item-based CF theo `userId`
+<p align="left">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB">
+  <img alt="Pandas" src="https://img.shields.io/badge/Pandas-data%20processing-150458">
+  <img alt="scikit-learn" src="https://img.shields.io/badge/scikit--learn-KNN%20%2B%20TF--IDF-F7931E">
+  <img alt="SciPy" src="https://img.shields.io/badge/SciPy-sparse%20matrix-8CAAE6">
+  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-demo-FF4B4B">
+  <img alt="Pytest" src="https://img.shields.io/badge/Pytest-15%20passed-0A9EDC">
+</p>
 
-Tài liệu gốc: [`document.pdf`](./document.pdf)
+`AIO Conquer 2026 · Module 02 · Hybrid Movie Recommender`
 
 ---
 
-## Bắt đầu nhanh (mỗi người)
+## 1. Problem
+
+Người xem phim có quá nhiều lựa chọn, nhưng không phải lúc nào cũng biết phim nào phù hợp với sở thích của mình. Project này xây dựng một recommender system để hỗ trợ ba tình huống:
+
+| Use case | Cách xử lý | Ý nghĩa |
+|---|---|---|
+| User mới hoặc thiếu lịch sử rating | **Simple Recommender** | Gợi ý phim phổ biến bằng weighted rating. |
+| Người dùng thích một phim và muốn tìm phim tương tự | **Content-based Recommender** | Tìm phim gần nhau theo nội dung như title/genres. |
+| User đã có lịch sử rating | **Collaborative Filtering + Hybrid** | Cá nhân hóa gợi ý dựa trên hành vi rating và nội dung phim. |
+
+**Scope:** MovieLens 25M -> preprocessing -> KNN CF/content artifacts -> hybrid recommendation -> Streamlit demo.
+
+**Out of scope:** production serving, realtime feedback loop, user authentication, online learning, A/B testing thật.
+
+---
+
+## 2. Current Solution
+
+Project hiện có bốn lớp gợi ý:
+
+1. **Simple Recommender**
+   - File chính: `src/recommender_simple.py`
+   - Tính `avg_rating`, `num_ratings`, `weighted_rating`
+   - Phù hợp cho cold-start hoặc fallback.
+
+2. **Content-based Recommender**
+   - File chính: `src/recommender_content.py`
+   - Dùng genres/title features để tìm phim tương tự.
+   - Bản artifact hiện tại dùng TF-IDF + KNN trong `src/ml/train_knn_content.py`.
+
+3. **Collaborative Filtering**
+   - File chính: `src/recommender_cf.py`, `src/ml/train_knn_cf.py`
+   - Dùng item-based KNN trên sparse movie-user matrix.
+   - Loại phim user đã xem khỏi kết quả recommendation.
+
+4. **Hybrid Recommender**
+   - File chính: `src/ml/hybrid_rcm.py`, `src/app/model_adapter.py`
+   - Kết hợp điểm CF và content:
+
+```text
+hybrid_score = alpha * cf_score + (1 - alpha) * content_score
+```
+
+Trong app hiện tại, `alpha = 0.8`, tức hệ thống ưu tiên tín hiệu collaborative filtering và dùng content score để bổ trợ.
+
+---
+
+## 3. Architecture
+
+```text
+MovieLens CSV
+    -> src/data_processing.py
+    -> data/processed/*.parquet
+    -> scripts/build_hybrid_artifacts.py
+    -> model/knn_cf + model/knn_content
+    -> src/app/model_adapter.py
+    -> src/app/streamlit_app.py
+    -> Top-K recommendations
+```
+
+### Runtime flow
+
+```text
+User selects userId
+    -> app loads processed data and model artifacts
+    -> CF candidate scores
+    -> content candidate scores
+    -> score normalization
+    -> hybrid score
+    -> remove seen movies
+    -> display ranked recommendations
+```
+
+---
+
+## 4. Tech Stack
+
+| Layer | Tool | Responsibility |
+|---|---|---|
+| Data processing | `pandas`, `pyarrow` | Load CSV, clean movies/ratings, save parquet. |
+| Sparse modeling | `scipy.sparse` | Store large movie-user and feature matrices efficiently. |
+| ML / retrieval | `scikit-learn` | KNN CF, KNN content, TF-IDF vectorization. |
+| Artifact storage | `joblib`, `.npz`, `.parquet` | Save trained models, mappings, sparse matrices. |
+| App | `Streamlit` | MicroLens Workbench demo. |
+| QA | `pytest` | Unit tests, data fixture tests, app adapter smoke tests. |
+| Analysis | `notebooks/`, `evaluation/` | EDA, modeling experiments, hybrid metrics. |
+
+---
+
+## 5. Repository Structure
+
+```text
+.
+├── data/
+│   ├── raw/                     # movies.csv, ratings.csv (not committed)
+│   └── processed/               # movies_clean, ratings_cf, ratings_content, train/test parquet
+├── docs/
+│   ├── data-dictionary.md
+│   ├── onboarding.md
+│   └── naming-conventions/
+├── evaluation/
+│   ├── hybrid/                  # alpha comparison and per-user hybrid metrics
+│   ├── cf_user_metrics.csv
+│   ├── content_user_metrics.csv
+│   └── model_comparison.csv
+├── model/
+│   ├── knn_cf/                  # CF KNN model, movie-user matrix, mappings
+│   └── knn_content/             # Content KNN model, TF-IDF matrix, mappings
+├── notebooks/
+│   ├── 01_eda_movies.ipynb
+│   ├── 02_eda_ratings.ipynb
+│   ├── 03_modeling.ipynb
+│   ├── 04_cf_experiments.ipynb
+│   └── 05_evaluation_analysis.ipynb
+├── plans/
+│   └── roles/                   # role-level task planning
+├── reports/
+│   ├── eda_summary.md
+│   ├── cf_evaluation.md
+│   ├── test_report.md
+│   └── final_report.md
+├── scripts/
+│   ├── build_hybrid_artifacts.py
+│   └── run_hybrid_evaluation.py
+├── src/
+│   ├── data_processing.py
+│   ├── recommender_simple.py
+│   ├── recommender_content.py
+│   ├── recommender_cf.py
+│   ├── evaluation.py
+│   ├── app.py                   # legacy 3-tab demo
+│   ├── app/
+│   │   ├── model_adapter.py
+│   │   └── streamlit_app.py      # current MicroLens Workbench
+│   └── ml/
+│       ├── train_knn_cf.py
+│       ├── train_knn_content.py
+│       ├── hybrid_rcm.py
+│       └── evalu_hybid.py
+├── tests/
+│   ├── fixtures/                # small committed data/model fixtures
+│   ├── test_recommender.py
+│   ├── test_data_pipeline.py
+│   └── test_app_smoke.py
+├── TEAM_BOARD.md
+├── document.pdf
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 6. Quickstart
+
+### 6.1 Setup environment
 
 ```bash
-cd "/Users/macbook/Module 2"
+cd /Users/duckien/Developer/AIO2026/Conquer_Project/hybrid-movie-recommender
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-1. Đọc [`TEAM_BOARD.md`](./TEAM_BOARD.md) — board chung, cập nhật status tại đây
-2. Mở file role của mình trong [`plans/roles/`](./plans/roles/)
-3. Làm đúng file mình **own** (xem bảng ownership bên dưới)
-4. Đặt dataset vào `data/raw/` (`movies.csv`, `ratings.csv`)
+Windows:
 
-### Chạy demo (sau khi có data + model)
+```bash
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 6.2 Prepare raw data
+
+Download MovieLens 25M and place files here:
+
+```text
+data/raw/movies.csv
+data/raw/ratings.csv
+```
+
+Dataset source:
+
+```text
+https://files.grouplens.org/datasets/movielens/ml-25m.zip
+```
+
+Raw CSV files are large and should not be committed.
+
+### 6.3 Run preprocessing
+
+```bash
+python -m src.data_processing
+```
+
+Expected processed outputs:
+
+```text
+data/processed/movies_clean.parquet
+data/processed/ratings_cf.parquet
+data/processed/ratings_content.parquet
+```
+
+`src/ml/train_knn_cf.py` will also create:
+
+```text
+data/processed/rating_cf_train.parquet
+data/processed/rating_cf_test.parquet
+```
+
+### 6.4 Build hybrid artifacts
+
+```bash
+python scripts/build_hybrid_artifacts.py
+```
+
+Expected artifact folders:
+
+```text
+model/knn_cf/
+model/knn_content/
+```
+
+Important files:
+
+```text
+model/knn_cf/knn_cf_model.joblib
+model/knn_cf/movie_user_matrix.npz
+model/knn_cf/cf_mappings.joblib
+model/knn_content/knn_content_model.joblib
+model/knn_content/movie_feature_matrix.npz
+model/knn_content/content_mappings.joblib
+model/knn_content/tfidf_vectorizer.joblib
+```
+
+### 6.5 Run Streamlit demo
+
+Current app:
+
+```bash
+streamlit run src/app/streamlit_app.py
+```
+
+The current app is **MicroLens Workbench**. It loads:
+
+```text
+data/processed/
+model/knn_cf/
+model/knn_content/
+```
+
+Legacy 3-tab demo, kept for reference:
 
 ```bash
 streamlit run src/app.py
 ```
 
-### Chạy test
+---
+
+## 7. Run With Small Test Fixtures
+
+The repository includes a small committed fixture bundle so QA can run tests or demo logic without full MovieLens 25M.
 
 ```bash
-pytest tests/ -v
+REC_DATA_DIR=tests/fixtures/data/processed \
+REC_MODEL_DIR=tests/fixtures/model \
+streamlit run src/app/streamlit_app.py
 ```
 
----
-
-## Ownership (tránh sửa chồng file)
-
-| Role | Người | File sở hữu |
-|------|--------|-------------|
-| Tech Leader | **Tân Dư** | `src/app.py`, `TEAM_BOARD.md`, `docs/`, integration |
-| AI Engineer (Data) | **Trần Hoàng Minh Tâm** | `src/data_processing.py`, `notebooks/01_*`, `notebooks/02_*`, `data/` |
-| AI Engineer (Model) | **tran Duong** | `src/recommender_simple.py`, `src/recommender_content.py` |
-| AI Engineer (Pipeline) | **18- Thanh Loan** | `src/recommender_cf.py`, `src/evaluation.py`, `artifacts/` CF |
-| QA / Reviewer | **Hoàng Đức Kiên** | `tests/*`, `reports/test_report.md` |
-
-Shared đọc được, nhưng **chỉ owner mới sửa**.
-
----
-
-## Cấu trúc thư mục
+Fixture folders:
 
 ```text
-Module 2/
-├── TEAM_BOARD.md          # Kanban — cập nhật mỗi ngày
-├── document.pdf           # Spec gốc
-├── requirements.txt
-├── plans/
-│   ├── plan.md
-│   └── roles/             # Task chi tiết từng người
-├── data/
-│   ├── raw/               # movies.csv, ratings.csv (không commit)
-│   └── processed/         # parquet sau clean
-├── notebooks/
-├── src/
-├── artifacts/
-├── tests/
-├── reports/
-└── docs/
+tests/fixtures/data/processed/
+tests/fixtures/model/
+```
+
+Regenerate fixtures:
+
+```bash
+python tests/fixtures/build_test_assets.py
 ```
 
 ---
 
-## Quy ước cập nhật board (5 cột)
+## 8. Evaluation
 
-Đồng bộ với Kanban nhóm:
+Run hybrid evaluation:
 
-1. **Chưa làm** → 2. **Đang làm** → 3. **Đang gặp vấn đề** → 4. **Chờ duyệt** → 5. **Hoàn thành**
+```bash
+python scripts/run_hybrid_evaluation.py
+```
 
-Chi tiết: [`TEAM_BOARD.md`](./TEAM_BOARD.md) + [`docs/board-howto.md`](./docs/board-howto.md).
+Outputs are saved in:
 
-Sync ngắn mỗi ngày: **15 phút**, mỗi người cập nhật cột task của mình.
+```text
+evaluation/hybrid/
+```
+
+Current stored hybrid comparison:
+
+| Alpha | precision@10 | recall@10 | hit_rate@10 | Evaluated users |
+|---:|---:|---:|---:|---:|
+| 0.5 | 0.038 | 0.039 | 0.22 | 100 |
+| 0.6 | 0.063 | 0.084 | 0.36 | 100 |
+| 0.7 | 0.075 | 0.099 | 0.44 | 100 |
+| 0.8 | **0.076** | **0.105** | **0.44** | 100 |
+| 0.9 | 0.073 | 0.104 | 0.44 | 100 |
+
+The app default uses `alpha = 0.8`.
+
+---
+
+## 9. Testing
+
+Run all tests:
+
+```bash
+pytest tests -q -rs -p no:cacheprovider
+```
+
+Current test suite:
+
+| File | Coverage | Current status |
+|---|---|---|
+| `tests/test_recommender.py` | Simple, content-based, CF, eval helpers | 10 passed |
+| `tests/test_data_pipeline.py` | Processed fixture schema, year, dtype, rating range, duplicates | 3 passed |
+| `tests/test_app_smoke.py` | App adapter prediction and Streamlit layout import | 2 passed |
+
+Latest verified result:
+
+```text
+15 passed, 3 warnings
+```
+
+The warnings come from `joblib` / `numpy` while loading fixture artifacts. They do not fail the tests, but should be monitored when upgrading dependencies.
+
+---
+
+## 10. Ownership
+
+| Role | Owner | Main files |
+|---|---|---|
+| Team Leader | Tân Dư | `src/app/streamlit_app.py`, `src/app/model_adapter.py`, `TEAM_BOARD.md`, docs/integration |
+| Data | Trần Hoàng Minh Tâm | `src/data_processing.py`, `notebooks/01_*`, `notebooks/02_*`, `data/` |
+| Model | tran Duong | `src/recommender_simple.py`, `src/recommender_content.py`, recommender design |
+| Pipeline | 18- Thanh Loan | `src/recommender_cf.py`, `src/ml/`, `scripts/`, `model/`, `evaluation/` |
+| Tester | Hoàng Đức Kiên | `tests/`, `tests/fixtures/`, `reports/test_report.md` |
+
+Shared files can be read by everyone. Changes should be coordinated through `TEAM_BOARD.md` to avoid editing the same file at the same time.
+
+---
+
+## 11. Known Limitations
+
+- The app smoke tests currently verify adapter behavior and module import, not full browser-based UI interaction.
+- Content-based recommendation mostly depends on title and genre text; it does not yet use tags, overview, cast, posters, or embeddings.
+- Hybrid evaluation currently reports a fixed stored run over 100 users; results may change if the split or user sample changes.
+- MovieLens 25M is sparse and large, so full artifact rebuild may be slow on low-memory machines.
+- This is a prototype/demo, not a production recommender service.
+
+---
+
+## 12. Useful Commands
+
+```bash
+# Setup
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Data
+python -m src.data_processing
+
+# Build models
+python scripts/build_hybrid_artifacts.py
+
+# Evaluate hybrid
+python scripts/run_hybrid_evaluation.py
+
+# Run current app
+streamlit run src/app/streamlit_app.py
+
+# Run current app with fixtures
+REC_DATA_DIR=tests/fixtures/data/processed \
+REC_MODEL_DIR=tests/fixtures/model \
+streamlit run src/app/streamlit_app.py
+
+# Test
+pytest tests -q -rs -p no:cacheprovider
+```

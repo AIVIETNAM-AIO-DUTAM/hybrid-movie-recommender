@@ -50,4 +50,13 @@ python -c "import pandas, sklearn, scipy, streamlit; print('OK')"
 pytest tests/ -q
 ```
 
-Stub test có thể fail một phần cho đến khi model được implement — QA sẽ cập nhật kỳ vọng.
+Test tự động hiện dùng fixture nhỏ trong `tests/fixtures/`, nên có thể chạy
+không cần full dataset/model local. Kỳ vọng hiện tại: toàn bộ test pass.
+
+Chạy app bằng fixture cho tester:
+
+```bash
+REC_DATA_DIR=tests/fixtures/data/processed \
+REC_MODEL_DIR=tests/fixtures/model \
+streamlit run src/app/streamlit_app.py
+```

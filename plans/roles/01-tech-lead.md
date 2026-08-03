@@ -1,13 +1,13 @@
 # Role 01 — Tech Lead / App Integration
 
 **Owner:** Tân Dư
-**Owns:** `src/app.py`, `TEAM_BOARD.md`, `docs/`, integration, demo script, final slide outline
+**Owns:** `src/app/streamlit_app.py`, `src/app/model_adapter.py`, `TEAM_BOARD.md`, `docs/`, integration, demo script, final slide outline
 
 ## Trách nhiệm
 
 - Chốt scope / DoD / ownership
-- Ghép 3 recommender vào Streamlit (`src/app.py`) — **deadline 01/08 (D8)**
-- Cold-start fallback: user mới → Simple
+- Ghép Hybrid Recommender vào Streamlit (`src/app/streamlit_app.py`) — **deadline 01/08 (D8)**
+- Tách model adapter để sau này thay model chính không phải sửa UI
 - Phase 2: tổng hợp report + demo cuối
 
 ## Phase 1 — App Build (D1–D9)
@@ -17,31 +17,30 @@
 - [ ] Verify repo scaffold + role files
 - [ ] Verify dataset MovieLens 25M trong `data/raw/`
 
-### D7 T4 30/07 — T09 App integration 3 tab (bắt đầu)
+### D7 T4 30/07 — T09 App integration Hybrid (bắt đầu)
 
-**Mục tiêu:** Wire 3 tab Streamlit, smoke test trên máy demo.
+**Mục tiêu:** Wire giao diện Recommend Streamlit, smoke test trên máy demo.
 
 **Sub-task checklist:**
-- [ ] Tab Simple: slider top_k + filter genre → `recommend_top_movies()`
-- [ ] Tab Content: cached `build_content_model()` + `recommend_similar_movies()`
-- [ ] Tab CF: cached `load_cf_cached()` + `recommend_for_user()` (cần T08 xong)
-- [ ] Try/except đa nhánh (KeyError + ValueError + Exception) → fallback Simple
-- [ ] Empty result → `st.info` + fallback Simple
-- [ ] Smoke test userId=1, userId=999999, "Toy Story (1995)"
+- [x] Layout gồm chọn/nhập user id, chọn top_k, nút Predict, bảng kết quả, context rating history
+- [x] Tách `model_adapter.py` để gọi Hybrid = CF + Content artifacts
+- [x] App hỗ trợ fixture qua `REC_DATA_DIR` và `REC_MODEL_DIR`
+- [ ] Smoke test userId thật, userId không có history, top_k khác nhau
 - [ ] Screenshot cho evidence
 
 **File cần làm:**
-- `src/app.py` — wire 3 tab đầy đủ
+- `src/app/streamlit_app.py` — giao diện Streamlit
+- `src/app/model_adapter.py` — adapter gọi model
 
 ### D8 T5 31/07 — T09 finish (APP COMPLETE)
 
 **Sub-task checklist:**
-- [ ] 3 tab chạy ổn định trên máy demo
-- [ ] Cold-start fallback verify 2 case (user mới + user không có rating ≥ 4.0)
+- [ ] App Recommend chạy ổn định trên máy demo
+- [ ] Verify user có history và user ít/không có tín hiệu
 - [ ] Hand-off cho Kiên regression D9
 - [ ] ⚠️ Từ 01/08 không thêm feature, chỉ sửa critical bug
 
-**Done khi (T09):** App 3 tab chạy ổn, fallback working. Evidence: 5 screenshot (1 mỗi tab + 2 fallback).
+**Done khi (T09):** App Recommend chạy ổn, model adapter trả đúng schema. Evidence: screenshot kết quả + context.
 
 ### D9 T6 01/08 — **🔒 APP FREEZE**
 
@@ -69,7 +68,7 @@
 
 **Sub-task checklist:**
 - [ ] Slide outline (10 phút demo, mỗi role 1 phút)
-- [ ] Screenshot 3 tab app cho slide
+- [ ] Screenshot app Recommend cho slide
 - [ ] 5–7 slide tổng
 
 **Files:**
@@ -93,4 +92,4 @@
 
 ## Done khi (toàn sprint)
 
-App 3 tab chạy ổn trước 01/08 23:59. Final report + slide rehearsal xong trước T4 06/08 23:59.
+App Recommend chạy ổn trước 01/08 23:59. Final report + slide rehearsal xong trước T4 06/08 23:59.

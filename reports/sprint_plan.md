@@ -117,22 +117,22 @@ C = mean toàn dataset, m = quantile(0.80)
 
 ---
 
-#### 🟦 T13 · Demo Streamlit v1 (Simple + Content)
+#### 🟦 T13 · Demo Streamlit v1 (Hybrid Recommend)
 
 | Field | Value |
 |-------|-------|
 | **Owner** | Tân Dư |
 | **Day** | CN 27/07 (0.5 ngày) |
 | **Depends on** | T11, T12 |
-| **Deliverable** | `src/app.py` chạy được 2 tab |
+| **Deliverable** | `src/app/streamlit_app.py` chạy được app Recommend |
 
 **Mô tả:**
-Wire Simple + Content vào Streamlit app, smoke test trên máy demo.
+Wire Hybrid Recommender vào Streamlit app, smoke test trên máy demo.
 
 **Acceptance:**
-- Tab Simple trả top-K với slider `top_k` và filter genre
-- Tab Content trả similar cho "Toy Story (1995)"
-- Lỗi `ValueError` hiển thị bằng `st.error`, không crash UI
+- Chọn/nhập user id, chọn `top_k`, nhấn Predict và thấy kết quả
+- Bảng kết quả có rank, title, genres, rating, model score
+- Context hiển thị rating history của user theo timestamp giảm dần
 
 ---
 
@@ -146,12 +146,12 @@ Wire Simple + Content vào Streamlit app, smoke test trên máy demo.
 | **Deliverable** | `tests/`, `reports/test_report.md`, bug log |
 
 **Mô tả:**
-Chạy test trên data thật sau Demo v1, log bug, bổ sung test case S3 (columns schema).
+Chạy test bằng fixture nhỏ sau Demo v1, log bug, bổ sung test case S3/D/A.
 
 **Acceptance:**
-- `pytest tests/ -v` chạy với parquet thật, ít nhất 9 tests cũ vẫn xanh
-- Thêm test S3 mới + case C1/C2 (Toy Story / Heat genre overlap) trên data thật
-- Bug list tuần 1 có ít nhất 1 entry (dù P2 UX)
+- `pytest tests/ -v` chạy xanh bằng fixture đã commit
+- Kỳ vọng hiện tại: 15 passed, 0 failed, 0 skipped
+- C1/C2 (Toy Story / Heat genre overlap) vẫn là manual test trên data thật
 
 ---
 
@@ -257,14 +257,14 @@ Leave-last-out split (per-user, latest timestamp → test), build CF trên train
 | **Owner** | Tân Dư |
 | **Day** | T4 30/07 (0.5 ngày) |
 | **Depends on** | T18 |
-| **Deliverable** | Tab CF trong `src/app.py` |
+| **Deliverable** | Hybrid Recommend trong `src/app/streamlit_app.py` |
 
 **Mô tả:**
-Wire CF vào Streamlit tab thứ 3. Load artifact (không build mỗi click). Khi user không có trong train set hoặc không có candidate → fallback Simple với `st.info`.
+Wire model adapter vào Streamlit. Load artifact (không build mỗi click). Khi user không có đủ tín hiệu hoặc không có candidate → hiển thị thông báo rõ.
 
 **Acceptance:**
 - userId=1 (existing) → top-K cá nhân hóa, không có phim đã rating
-- userId=999999 (unknown) → message + fallback Simple top-K
+- userId=999999 (unknown) → message rõ, không crash UI
 - Click không freeze (load artifact, không rebuild)
 
 ---
@@ -335,7 +335,7 @@ T00 (done)
 - [ ] Content similar + genre explain
 - [ ] CF theo `userId`, không gồm phim đã rating
 - [ ] Cold-start → fallback Simple
-- [ ] Streamlit 3 tab
+- [ ] Streamlit Recommend app: user id, top_k, Predict, results, context
 - [ ] Test report + eval HR@10/NDCG@10 (hoặc sample)
 - [ ] Không OOM (sparse + artifacts)
 

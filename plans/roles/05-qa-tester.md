@@ -20,35 +20,34 @@
 
 ### D5 T2 28/07 — Test T04/T05 (unblock early)
 
-**Mục tiêu:** Khi Simple/Content xong, unskip + test ngay để tránh dồn cuối.
+**Mục tiêu:** Khi Simple/Content xong, chạy test ngay để tránh dồn cuối.
 
 **Sub-task checklist:**
-- [ ] Unskip D1/D2/D3 trong `test_data_pipeline.py` khi T03 xong
-- [ ] Chạy `pytest tests/ -v` với parquet thật
-- [ ] Fix các test fail (do tiny fixture ≠ data thật)
-- [ ] Verify S3 (columns schema) xanh
-- [ ] Cập nhật `tests/test_cases.md` status
+- [x] D1/D2/D3 trong `test_data_pipeline.py` đã chạy bằng fixture parquet
+- [x] Chạy `pytest tests/ -v`
+- [x] Verify S3 (columns schema) xanh
+- [x] Cập nhật `tests/test_cases.md` status
 
 ### D7–D8 T4–T5 30–31/07 — Test T08/T09 (CF + app)
 
 **Sub-task checklist:**
-- [ ] Unskip A1/A2 trong `test_app_smoke.py` khi T09 xong
-- [ ] Verify 4 tests CF (F1–F4) xanh trên data thật
-- [ ] Test UI smoke: tab Simple, Content, CF trên máy demo
-- [ ] Log bug vào `reports/test_report.md`
+- [x] A1/A2 trong `test_app_smoke.py` đã chạy bằng fixture data/model
+- [x] Verify 4 tests CF (F1–F4) xanh
+- [ ] Test UI smoke app Hybrid trên máy demo
+- [ ] Log bug vào `reports/test_report.md` nếu có
 
 ### D9 T6 01/08 — **T11 Regression + APP FREEZE** 🔒
 
 **Mục tiêu:** Final regression trên môi trường hoàn chỉnh. Mọi case P0/P1 xanh. Sau đó app **freeze**.
 
 **Sub-task checklist:**
-- [ ] Verify all artifacts (parquet + CF artifacts) exist
-- [ ] Chạy `pytest tests/ -v --tb=short`
-- [ ] Verify 10+ tests cũ vẫn xanh
-- [ ] Verify S3 mới xanh
-- [ ] Verify D1/D2/D3 + A1/A2 unskip xanh
+- [x] Verify fixture artifacts (parquet + CF/Content artifacts) exist
+- [x] Chạy `pytest tests/ -v`
+- [x] Verify 10 tests recommender cũ vẫn xanh
+- [x] Verify S3 mới xanh
+- [x] Verify D1/D2/D3 + A1/A2 xanh, không còn skip
 - [ ] Log mọi fail vào bug list
-- [ ] Cập nhật `reports/test_report.md` summary
+- [x] Cập nhật `reports/test_report.md` summary
 - [ ] **🔒 APP FREEZE** — sau khi report xanh, không thêm feature
 
 **Cases bắt buộc (PDF §3.1, §3.2, §3.3):**
@@ -66,6 +65,11 @@
 | F2 | userId không tồn tại | KeyError/fallback |
 | F3 | sparse pipeline | không OOM |
 | F4 | user không có liked | ValueError/fallback |
+| D1 | movies_clean schema | đủ cột xử lý |
+| D2 | year extracted | year hợp lệ |
+| D3 | ratings fixture + dtype | dtype/range/no dup hợp lệ |
+| A1 | model adapter predict | trả top-K đúng schema |
+| A2 | Streamlit app import | import được layout hiện tại |
 
 **Done khi (T11):** Test report xanh P0/P1. App freeze.
 
@@ -103,4 +107,6 @@
 
 ## Done khi (toàn sprint)
 
-Test report xanh P0/P1 trước **01/08 (APP FREEZE)**. Eval chart + report section 8 xong D12. Rehearsal D14.
+Test report xanh P0/P1 trước **01/08 (APP FREEZE)**. Trạng thái tự động
+gần nhất: `15 passed`, `0 failed`, `0 skipped`. Eval chart + report section 8
+xong D12. Rehearsal D14.

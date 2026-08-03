@@ -110,11 +110,11 @@ Tham chiếu PDF mục 3.4.
 
 Owner: **Tân Dư**
 
-- 3 tab Streamlit
+- Streamlit Recommend Workbench: chọn/nhập user id, chọn top_k, Predict, bảng kết quả và context rating history
 - Hạn chế (PDF mục 11 rủi ro):
   - Content chỉ có genre → gợi ý thô
   - CF cần user có rating → cold-start
-  - Không có Hybrid / Neural CF (out of scope)
+  - Hybrid hiện tại kết hợp CF + Content bằng weighted score, chưa phải Neural CF
 
 ## 8. Test & Evaluation
 

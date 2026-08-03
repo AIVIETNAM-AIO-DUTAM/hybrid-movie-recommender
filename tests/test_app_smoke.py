@@ -1,64 +1,64 @@
-"""Streamlit app smoke tests — owned by QA (Kiên).
-
-Cases A1-A2 cover Task T13/T20 deliverables. They are SKIPPED until
-`data/processed/*.parquet` and Streamlit v1 are ready. Streamlit apps
-are hard to unit-test cleanly, so these are intentionally lightweight:
-they verify that imports succeed and the entry function doesn't blow up
-on the missing-data branch.
-
-For full UX testing, do manual smoke testing in the browser:
-
-    streamlit run src/app.py
-
-Reference: src/app.py
-"""
-
 from __future__ import annotations
 
+import importlib
 import sys
 from pathlib import Path
 
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT))  # so `import src.app` works
+SRC_DIR = ROOT / "src"
+FIXTURE_DATA_DIR = ROOT / "tests" / "fixtures" / "data" / "processed"
+FIXTURE_MODEL_DIR = ROOT / "tests" / "fixtures" / "model"
 
 
-def _require_processed():
-    processed = ROOT / "data" / "processed" / "movies_clean.parquet"
-    if not processed.exists():
-        pytest.skip(
-            "Parquet missing — Demo v1 (T13) cannot be tested yet. "
-            "Run `python scripts/run_pipeline.py` first."
-        )
+def _reload_app_modules(monkeypatch):
+    monkeypatch.setenv("REC_DATA_DIR", str(FIXTURE_DATA_DIR))
+    monkeypatch.setenv("REC_MODEL_DIR", str(FIXTURE_MODEL_DIR))
+
+    if str(SRC_DIR) not in sys.path:
+        sys.path.insert(0, str(SRC_DIR))
+
+    for module_name in ["app.streamlit_app", "app.model_adapter"]:
+        sys.modules.pop(module_name, None)
 
 
-def test_a1_missing_data_warns_cleanly(monkeypatch, tmp_path):
-    """A1: when parquet is missing, app shows a warning — no traceback.
+def test_a1_model_adapter_predicts_from_fixture(monkeypatch):
+    _reload_app_modules(monkeypatch)
 
-    Spec §11 risk: 'Title bị trùng hoặc nhập sai' style edge cases.
-    """
-    # TODO Kiên: implement after T13
-    # Streamlit testing approach:
-    #   from streamlit.testing.v1 import AppTest
-    #   at = AppTest.from_file("src/app.py", default_timeout=10).run()
-    #   assert not at.exception
-    #   assert any("parquet" in w.lower() for w in at.warning)
-    pytest.skip("TODO Kiên: implement after T13 Demo v1")
+    model_adapter = importlib.import_module("app.model_adapter")
+    movies, ratings = model_adapter.load_data()
+    recommendations = model_adapter.predict(
+        user_id=1,
+        movies=movies,
+        ratings=ratings,
+        top_k=3,
+    )
+
+    required_columns = {
+        "rank",
+        "movieId",
+        "title",
+        "genres",
+        "rating",
+        "num_ratings",
+        "model_score",
+    }
+    user_seen = set(
+        ratings.loc[ratings["userId"] == 1, "movieId"].astype(int)
+    )
+
+    assert required_columns <= set(recommendations.columns)
+    assert len(recommendations) == 3
+    assert recommendations["rank"].tolist() == [1, 2, 3]
+    assert set(recommendations["movieId"].astype(int)).isdisjoint(user_seen)
+    assert recommendations["model_score"].is_monotonic_decreasing
 
 
-def test_a2_three_tabs_render():
-    """A2: app exposes 3 tabs — Simple / Content / CF.
+def test_a2_streamlit_app_imports_current_layout(monkeypatch):
+    _reload_app_modules(monkeypatch)
 
-    Spec §7: UI 3 tab chính.
-    """
-    _require_processed()
-    # TODO Kiên: implement after T13
-    # from streamlit.testing.v1 import AppTest
-    # at = AppTest.from_file("src/app.py", default_timeout=10).run()
-    # tab_titles = [t.label for t in at.tabs]
-    # assert "Simple Recommender" in tab_titles
-    # assert "Content-based" in tab_titles
-    # assert "Collaborative Filtering" in tab_titles
-    pytest.skip("TODO Kiên: implement after T13 Demo v1")
+    streamlit_app = importlib.import_module("app.streamlit_app")
+
+    assert hasattr(streamlit_app, "render_result_rows")
+    assert hasattr(streamlit_app, "render_context")
+    assert hasattr(streamlit_app, "main")

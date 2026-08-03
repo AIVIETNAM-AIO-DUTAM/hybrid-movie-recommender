@@ -6,7 +6,7 @@ effort: high
 branch: main
 tags: [recommender, simple, content-based, collaborative-filtering]
 created: 2026-07-22
-updated: 2026-07-22
+updated: 2026-08-03
 ---
 
 # Plan — Movie Recommendation System (14 ngày)
@@ -26,7 +26,7 @@ Xây demo gợi ý phim với 3 phương pháp trong scope `document.pdf`:
 
 ## Out of scope (Won't-have)
 
-- Hybrid / Context-aware / Matrix Factorization / Neural CF
+- Context-aware / Matrix Factorization / Neural CF
 - A/B testing / production deploy
 
 ## Deviations from spec
@@ -34,6 +34,8 @@ Xây demo gợi ý phim với 3 phương pháp trong scope `document.pdf`:
 - **CF model code + evaluation** own bởi role "AI Engineer (Pipeline)" (Loan) thay vì "AI Model" (PDF mục 8). Lý do: CF nặng nhất, Pipeline rảnh sau data prep.
 - **`pipeline.py`** (PDF mục 12) gộp vào `recommender_cf.py`.
 - **Pre-sprint setup** đã hoàn thành trước T01.
+- **Demo hiện tại dùng Hybrid Recommender** qua `src/app/model_adapter.py`: adapter gọi đồng thời CF và Content artifacts rồi merge điểm theo `DEFAULT_ALPHA`.
+- **App Streamlit hiện tại nằm trong `src/app/streamlit_app.py`**.
 
 ## Timeline 14 ngày (T5 24/07 → T4 06/08)
 
@@ -51,7 +53,7 @@ Xây demo gợi ý phim với 3 phương pháp trong scope `document.pdf`:
 | D4  | CN 27/07 | **Meeting review** · T04 Simple · T05 Content · T06 Utility matrix | 1 |
 | D5  | T2 28/07 | T04/T05 finish · T06 finish | 1 |
 | D6  | T3 29/07 | T07 Item similarity · T08 recommend · Demo v1 | 1 |
-| D7  | T4 30/07 | T08 finish · T09 App integration 3 tab | 1 |
+| D7  | T4 30/07 | T08 finish · T09 App integration Hybrid | 1 |
 | D8  | T5 31/07 | T09 finish (APP COMPLETE) · T10 Eval start | 1 |
 | **D9** | **T6 01/08** | T10 Eval finish · T11 Regression · **🔒 APP FREEZE** | 1 |
 | D10 | T7 02/08 | T12 Final report draft (9 section) | 2 |
@@ -74,7 +76,7 @@ Xây demo gợi ý phim với 3 phương pháp trong scope `document.pdf`:
 | T06 | CF utility matrix | Loan | D4–D5 | artifact sparse |
 | T07 | CF item similarity | Loan | D6 | artifact |
 | T08 | CF recommend_for_user | Loan | D6–D7 | tab 3 logic |
-| T09 | App integration 3 tab + cold-start | Tân Dư | D7–D8 | app complete |
+| T09 | App integration Hybrid Recommend | Tân Dư | D7–D8 | app complete |
 | T10 | Eval HR@10 / NDCG@10 | Loan + Kiên | D8–D9 | metric |
 | T11 | Regression full + bug list | Kiên | D9 | **🔒 APP FREEZE** |
 
@@ -96,7 +98,7 @@ T03 (parquet) ─┬─→ T04 Simple ─────────────┐
 
 T03 là bottleneck (T04/T05/T06 phụ thuộc). T06 phải bắt đầu D4 (sớm hơn so với plan cũ) để CF kịp app deadline 01/08.
 
-## Pre-created stubs (signature + docstring + TODO)
+## Main Files
 
 ### Code
 | File | Owner |
@@ -106,7 +108,8 @@ T03 là bottleneck (T04/T05/T06 phụ thuộc). T06 phải bắt đầu D4 (sớ
 | `src/recommender_content.py` | Duong |
 | `src/recommender_cf.py` | Loan |
 | `src/evaluation.py` | Loan |
-| `src/app.py` | Tân Dư |
+| `src/app/streamlit_app.py` | Tân Dư |
+| `src/app/model_adapter.py` | Tân Dư |
 | `scripts/run_pipeline.py` | Tâm |
 | `scripts/build_cf_artifacts.py` | Loan |
 | `scripts/run_evaluation.py` | Loan |
@@ -126,6 +129,9 @@ T03 là bottleneck (T04/T05/T06 phụ thuộc). T06 phải bắt đầu D4 (sớ
 | `tests/test_recommender.py` | S1, S2, S3, C3, C4, F1, F2, F3, F4 |
 | `tests/test_data_pipeline.py` | D1, D2, D3 |
 | `tests/test_app_smoke.py` | A1, A2 |
+
+Các test D/A hiện chạy bằng fixture nhỏ trong `tests/fixtures/`, không phụ thuộc
+vào full dataset/model local. Kết quả regression gần nhất: `15 passed`.
 
 ## Role files
 

@@ -6,8 +6,8 @@ Mapping implementation:
 - S1, S2, S3 → `tests/test_recommender.py`
 - C3, C4 → `tests/test_recommender.py` (C1/C2 = real-data manual)
 - F1, F2, F3 → `tests/test_recommender.py`
-- D1, D2, D3 → `tests/test_data_pipeline.py` (skip until T10)
-- A1, A2 → `tests/test_app_smoke.py` (skip until T13)
+- D1, D2, D3 → `tests/test_data_pipeline.py`
+- A1, A2 → `tests/test_app_smoke.py`
 
 ## Simple Recommender
 
@@ -15,7 +15,7 @@ Mapping implementation:
 |----|------|----------|------|--------|
 | S1 | top_k=10 | đúng 10 rows | test_recommender.py::test_simple_top_k | pass |
 | S2 | phim ít rating điểm cao | không đứng top nếu num_ratings thấp | test_recommender.py::test_simple_rare_high_rating_not_dominate | pass |
-| S3 | columns schema | có movieId, title, genres, avg_rating, num_ratings, weighted_rating | test_recommender.py::test_simple_columns_schema | pending |
+| S3 | columns schema | có movieId, title, genres, avg_rating, num_ratings, weighted_rating | test_recommender.py::test_simple_columns_schema | pass |
 
 ## Content-based
 
@@ -38,16 +38,16 @@ Mapping implementation:
 
 | ID | Case | Expected | File | Status |
 |----|------|----------|------|--------|
-| D1 | movies_clean schema | có 6 cột: movieId, title, year, genres, genres_list, genres_text | test_data_pipeline.py::test_d1_movies_schema | skip (until T10) |
-| D2 | year extracted | ≥95% phim có year hợp lệ | test_data_pipeline.py::test_d2_movies_year_extracted | skip (until T10) |
-| D3 | ratings filter + dtype | dtype int32/int32/float32/int64, user≥20, movie≥50, no dup | test_data_pipeline.py::test_d3_ratings_filtered_and_dtype | skip (until T10) |
+| D1 | movies_clean schema | có 6 cột: movieId, title, year, genres, genres_list, genres_text | test_data_pipeline.py::test_d1_movies_schema | pass |
+| D2 | year extracted | >=95% phim có year hợp lệ | test_data_pipeline.py::test_d2_movies_year_extracted | pass |
+| D3 | ratings fixture + dtype | dtype hợp lệ, rating trong range, no dup, movieId khớp movies | test_data_pipeline.py::test_d3_ratings_filtered_and_dtype | pass |
 
 ## App / UX
 
 | ID | Case | Expected | File | Status |
 |----|------|----------|------|--------|
-| A1 | thiếu parquet | warning rõ, không traceback xấu | test_app_smoke.py::test_a1_missing_data_warns_cleanly | skip (until T13) |
-| A2 | 3 tabs render | Simple / Content / CF | test_app_smoke.py::test_a2_three_tabs_render | skip (until T13) |
+| A1 | model adapter predict | load fixture data/model và trả top-K đúng schema | test_app_smoke.py::test_a1_model_adapter_predicts_from_fixture | pass |
+| A2 | Streamlit app import | app hiện tại import được và có các hàm render chính | test_app_smoke.py::test_a2_streamlit_app_imports_current_layout | pass |
 
 ## Evaluation
 

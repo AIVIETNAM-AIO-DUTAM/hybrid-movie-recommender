@@ -23,3 +23,11 @@ Nếu không set `REC_DATA_DIR` và `REC_MODEL_DIR`, app vẫn dùng dữ liệu
 data/processed/
 model/
 ```
+
+Chạy test tự động bằng fixture:
+
+```bash
+pytest tests/ -v
+```
+
+Kỳ vọng hiện tại: `15 passed`, không còn skip.
