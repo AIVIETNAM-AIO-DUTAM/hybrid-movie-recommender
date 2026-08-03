@@ -112,10 +112,13 @@ def evaluate(
     n_total = 0
     hits: list[float] = []
     ndcgs: list[float] = []
+    n_missing_truth = 0
+    n_cold_start = 0
     for user_id in eligible_users:
         n_total += 1
         truth_id = truth_by_user.get(int(user_id))
         if truth_id is None:
+            n_missing_truth += 1
             continue
         try:
             recs = recommend_for_user(
@@ -125,12 +128,16 @@ def evaluate(
             # Unknown user or no liked items / no candidates → counted in the
             # denominator (HR@10_all) but not the numerator. App-level
             # fallback handles these in production.
+            n_cold_start += 1
             continue
         rec_ids = recs["movieId"].astype(int).tolist()
         hits.append(hit_rate_at_k(rec_ids, int(truth_id), k=top_k))
         ndcgs.append(ndcg_at_k(rec_ids, int(truth_id), k=top_k))
 
-    return summarize_scores(hits, ndcgs, n_total_users=n_total)
+    summary = summarize_scores(hits, ndcgs, n_total_users=n_total)
+    summary.attrs["n_missing_truth"] = n_missing_truth
+    summary.attrs["n_cold_start"] = n_cold_start
+    return summary
 
 
 def run_evaluation(

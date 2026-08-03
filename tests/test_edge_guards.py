@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from data_processing import clean_ratings, load_processed  # noqa: E402
 from evaluation import leave_last_out_split  # noqa: E402
+from evaluation import evaluate, prepare_eval  # noqa: E402
 from recommender_cf import (  # noqa: E402
     build_cf_model,
     build_utility_matrix,
@@ -63,6 +64,15 @@ def test_cf_build_meta_fingerprint_roundtrip(tmp_path, cf_model_mini):
         load_cf_artifacts(tmp_path)
 
 
+def test_cf_load_missing_meta_raises(tmp_path, cf_model_mini):
+    """I8: artifacts without cf_build_meta.json must be refused, not silently
+    served with every provenance check skipped."""
+    save_cf_artifacts(cf_model_mini, prefix=tmp_path, n_ratings=99)
+    (tmp_path / "cf_build_meta.json").unlink()
+    with pytest.raises(ValueError, match="cf_build_meta.json is missing"):
+        load_cf_artifacts(tmp_path)
+
+
 def test_cf_build_meta_n_ratings_drift(tmp_path, cf_model_mini):
     save_cf_artifacts(cf_model_mini, prefix=tmp_path, n_ratings=99)
     with pytest.raises(ValueError, match="n_ratings"):
@@ -81,6 +91,37 @@ def test_build_utility_empty_ratings():
     empty = pd.DataFrame(columns=["userId", "movieId", "rating"])
     with pytest.raises(ValueError, match="empty"):
         build_utility_matrix(empty)
+
+
+def test_build_utility_nan_ids_raise():
+    """I3: NaN userId/movieId/rating must raise early, not create phantom
+    category rows or crash later inside int(np.nan)."""
+    bad = pd.DataFrame(
+        [
+            {"userId": 1, "movieId": 1, "rating": 4.0},
+            {"userId": float("nan"), "movieId": 2, "rating": 4.0},
+        ]
+    )
+    with pytest.raises(ValueError, match="NaN"):
+        build_utility_matrix(bad)
+
+    bad_movie = pd.DataFrame(
+        [
+            {"userId": 1, "movieId": float("nan"), "rating": 4.0},
+            {"userId": 1, "movieId": 2, "rating": 4.0},
+        ]
+    )
+    with pytest.raises(ValueError, match="NaN"):
+        build_utility_matrix(bad_movie)
+
+    bad_rating = pd.DataFrame(
+        [
+            {"userId": 1, "movieId": 1, "rating": float("nan")},
+            {"userId": 1, "movieId": 2, "rating": 4.0},
+        ]
+    )
+    with pytest.raises(ValueError, match="NaN"):
+        build_utility_matrix(bad_rating)
 
 
 def test_recommend_orphaned_movie_ids_warns(cf_movies_mini, cf_model_mini):
@@ -138,6 +179,25 @@ def test_clean_ratings_empty_raises():
         clean_ratings(tiny, min_user_ratings=20, min_movie_ratings=50)
 
 
+def test_clean_ratings_duplicate_keeps_most_recent():
+    """I7: duplicate (user, movie) with unsorted rows must keep the newest
+    timestamp, not the first row encountered in the CSV."""
+    rows = [
+        {"userId": 1, "movieId": 1, "rating": 2.0, "timestamp": 100},
+        {"userId": 1, "movieId": 1, "rating": 5.0, "timestamp": 300},
+        {"userId": 1, "movieId": 1, "rating": 3.0, "timestamp": 200},
+    ]
+    # Reversed input order to prove we don't just keep "first row".
+    out = clean_ratings(
+        pd.DataFrame(list(reversed(rows))),
+        min_user_ratings=1,
+        min_movie_ratings=1,
+    )
+    assert len(out) == 1
+    assert out.iloc[0]["rating"] == 5.0
+    assert out.iloc[0]["timestamp"] == 300
+
+
 def test_load_processed_missing(monkeypatch, tmp_path):
     import data_processing as dp
 
@@ -157,6 +217,39 @@ def test_leave_last_out_timestamp_ties_deterministic():
     _, test_a = leave_last_out_split(a)
     _, test_b = leave_last_out_split(b)
     assert int(test_a.iloc[0]["movieId"]) == int(test_b.iloc[0]["movieId"])
+
+
+def test_evaluate_reports_skip_counts():
+    """I4: evaluate() must expose how many users were skipped (missing truth /
+    cold-start) so HR@10 vs HR@10_all divergence is diagnosable."""
+    movies = pd.DataFrame(
+        [
+            {"movieId": 1, "title": "A (2000)", "genres": "Drama"},
+            {"movieId": 2, "title": "B (2001)", "genres": "Drama"},
+        ]
+    )
+    rows = []
+    # user 1: 2 ratings -> train 1, test 1 (evaluable)
+    rows += [
+        {"userId": 1, "movieId": 1, "rating": 5.0, "timestamp": 100},
+        {"userId": 1, "movieId": 2, "rating": 4.0, "timestamp": 200},
+    ]
+    # user 2: single rating -> test-only -> cold-start (skipped by evaluate)
+    rows.append({"userId": 2, "movieId": 1, "rating": 4.0, "timestamp": 300})
+    ratings = pd.DataFrame(rows)
+
+    cf, test, truth_by_user = prepare_eval(ratings)
+    eligible = test["userId"].drop_duplicates()
+    summary = evaluate(cf, movies, truth_by_user, eligible, top_k=2)
+
+    assert int(summary.attrs["n_missing_truth"]) == 0
+    # Both users end up cold-start in the recommend loop: user 2 has no train
+    # ratings at all, and user 1's single train rating yields no CF candidates
+    # on such a tiny graph (recommend_for_user raises ValueError).
+    assert int(summary.attrs["n_cold_start"]) == 2
+    assert int(summary.iloc[0]["users_evaluated"]) == 0
+    # HR@10_all counts the skipped users in the denominator (0 hits / 2).
+    assert summary.iloc[0]["HR@10_all"] == 0.0
 
 
 def test_streamlit_app_parses():

@@ -38,6 +38,15 @@ class CFModel:
 def build_utility_matrix(ratings: pd.DataFrame) -> tuple[csr_matrix, np.ndarray, np.ndarray, dict, dict]:
     if ratings.empty:
         raise ValueError("ratings DataFrame is empty; cannot build utility matrix")
+    # Drop NaN IDs BEFORE category encoding: a NaN userId/movieId would
+    # otherwise become a phantom category (and `int(np.nan)` crashes at the
+    # mapping stage). A NaN rating would make csr_matrix raise later — filter
+    # it here so the failure is a clear, earlier ValueError.
+    if ratings["userId"].isna().any() or ratings["movieId"].isna().any() or ratings["rating"].isna().any():
+        raise ValueError(
+            "ratings DataFrame contains NaN in userId/movieId/rating; "
+            "clean the data before building the utility matrix"
+        )
     user_cats = ratings["userId"].astype("category")
     movie_cats = ratings["movieId"].astype("category")
     user_ids = user_cats.cat.categories.to_numpy()
@@ -162,6 +171,14 @@ def recommend_for_user(
     unseen = np.setdiff1d(np.arange(n_movies), list(seen), assume_unique=False)
     # Filter to candidates with positive similarity mass to avoid returning
     # pure noise when the user has liked nothing similar.
+    nan_unseen = int(np.isnan(scores[unseen]).sum())
+    if nan_unseen:
+        warnings.warn(
+            f"recommend_for_user: {nan_unseen} candidate movie(s) have NaN "
+            "similarity (zero-norm item vectors) and were dropped",
+            UserWarning,
+            stacklevel=2,
+        )
     unseen = unseen[scores[unseen] > 0]
     if len(unseen) == 0:
         # No candidate movies. Caller (app.py) should catch ValueError and
@@ -259,29 +276,36 @@ def load_cf_artifacts(
             f"expected ({n_items}, {n_items}) from movie_id_maps.pkl"
         )
     meta_path = prefix / CF_BUILD_META
-    if meta_path.exists():
-        meta = json.loads(meta_path.read_text())
-        if int(meta.get("n_users", -1)) != n_users or int(meta.get("n_items", -1)) != n_items:
+    if not meta_path.exists():
+        # Without build metadata we cannot verify fingerprint / n_ratings /
+        # shape provenance. Refuse to serve unverifiable artifacts instead of
+        # silently skipping every drift check.
+        raise ValueError(
+            f"{CF_BUILD_META} is missing in '{prefix}'. Rebuild CF artifacts "
+            "to restore provenance checks."
+        )
+    meta = json.loads(meta_path.read_text())
+    if int(meta.get("n_users", -1)) != n_users or int(meta.get("n_items", -1)) != n_items:
+        raise ValueError(
+            f"{CF_BUILD_META} counts ({meta.get('n_users')}, {meta.get('n_items')}) "
+            f"do not match maps ({n_users}, {n_items}). Rebuild CF artifacts."
+        )
+    expected_fp = meta.get("movie_ids_sha1")
+    actual_fp = _movie_ids_fingerprint(maps["movie_ids"])
+    if expected_fp and expected_fp != actual_fp:
+        raise ValueError(
+            f"{CF_BUILD_META} movie_ids fingerprint mismatch "
+            f"(meta={expected_fp[:8]}… vs maps={actual_fp[:8]}…). "
+            "Rebuild CF artifacts after regenerating processed data."
+        )
+    # Detect stale artifacts vs rebuilt ratings parquet.
+    if expected_n_ratings is not None and "n_ratings" in meta:
+        if int(meta["n_ratings"]) != int(expected_n_ratings):
             raise ValueError(
-                f"{CF_BUILD_META} counts ({meta.get('n_users')}, {meta.get('n_items')}) "
-                f"do not match maps ({n_users}, {n_items}). Rebuild CF artifacts."
-            )
-        expected_fp = meta.get("movie_ids_sha1")
-        actual_fp = _movie_ids_fingerprint(maps["movie_ids"])
-        if expected_fp and expected_fp != actual_fp:
-            raise ValueError(
-                f"{CF_BUILD_META} movie_ids fingerprint mismatch "
-                f"(meta={expected_fp[:8]}… vs maps={actual_fp[:8]}…). "
+                f"{CF_BUILD_META} n_ratings={meta['n_ratings']} does not match "
+                f"current ratings ({expected_n_ratings} rows). "
                 "Rebuild CF artifacts after regenerating processed data."
             )
-        # Detect stale artifacts vs rebuilt ratings parquet.
-        if expected_n_ratings is not None and "n_ratings" in meta:
-            if int(meta["n_ratings"]) != int(expected_n_ratings):
-                raise ValueError(
-                    f"{CF_BUILD_META} n_ratings={meta['n_ratings']} does not match "
-                    f"current ratings ({expected_n_ratings} rows). "
-                    "Rebuild CF artifacts after regenerating processed data."
-                )
     return CFModel(
         utility=utility,
         item_similarity=item_similarity,

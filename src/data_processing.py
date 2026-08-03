@@ -130,9 +130,15 @@ def clean_ratings(
 
     out = ratings.copy()
 
-    # Remove duplicate user-movie pairs.
-    out = out.drop_duplicates(
-        subset=["userId", "movieId"]
+    # Remove duplicate user-movie pairs. Sort by timestamp first so the kept
+    # row is the MOST RECENT rating, not whatever order the CSV happened to
+    # have (an unsorted CSV would otherwise silently keep a stale rating).
+    out = out.sort_values(
+        "timestamp",
+        kind="mergesort",
+    ).drop_duplicates(
+        subset=["userId", "movieId"],
+        keep="last",
     )
 
     # Keep valid MovieLens ratings.
@@ -265,12 +271,19 @@ def load_processed() -> tuple[
     # Alias integrity: ratings_clean.parquet must match ratings_cf when present.
     alias = PROCESSED_DIR / "ratings_clean.parquet"
     if alias.exists():
-        n_alias = len(pd.read_parquet(alias, columns=["userId"]))
-        if n_alias != len(ratings_cf):
+        alias_df = pd.read_parquet(alias)
+        if len(alias_df) != len(ratings_cf):
             raise ValueError(
-                f"ratings_clean.parquet ({n_alias} rows) drifted from "
+                f"ratings_clean.parquet ({len(alias_df)} rows) drifted from "
                 f"ratings_cf.parquet ({len(ratings_cf)} rows). "
                 "Re-run the pipeline to regenerate both."
+            )
+        if not alias_df[["userId", "movieId", "rating"]].equals(
+            ratings_cf[["userId", "movieId", "rating"]]
+        ):
+            raise ValueError(
+                "ratings_clean.parquet content drifted from ratings_cf.parquet "
+                "despite matching row counts. Re-run the pipeline to regenerate both."
             )
 
     return (

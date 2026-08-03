@@ -139,8 +139,8 @@ Leave-last-out by timestamp, sample 200 user:
 
 | Metric | Value |
 |---|---|
-| HR@10 | 0.01 |
-| NDCG@10 | 0.0072 |
+| HR@10 | 0.02 |
+| NDCG@10 | 0.0141 |
 
 ![bg right:50% w:480](../reports/charts/hr_vs_topk.png)
 

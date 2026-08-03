@@ -1,1 +1,7 @@
-*.parquet filter=lfs diff=lfs merge=lfs -text
+# Test fixtures — binary artifacts tracked via Git LFS so a fresh clone
+# (after `git lfs pull`) has everything needed to run the full suite,
+# including the hybrid model_adapter tests.
+tests/fixtures/**/*.parquet filter=lfs diff=lfs merge=lfs -text
+tests/fixtures/**/*.joblib filter=lfs diff=lfs merge=lfs -text
+tests/fixtures/**/*.npz filter=lfs diff=lfs merge=lfs -text
+tests/fixtures/**/*.pkl filter=lfs diff=lfs merge=lfs -text

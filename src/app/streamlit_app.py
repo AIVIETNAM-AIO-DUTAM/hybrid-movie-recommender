@@ -515,7 +515,8 @@ def main() -> None:
             st.warning("Không tạo được recommendation cho user này.")
         else:
             st.caption(
-                f"Showing {len(recommendations)} predictions via {model_name}"
+                f"Showing {len(recommendations)} predictions for user "
+                f"{active_user_id} via {model_name}"
             )
             render_result_rows(recommendations)
 

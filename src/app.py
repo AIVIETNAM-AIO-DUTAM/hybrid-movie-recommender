@@ -20,6 +20,7 @@ CF_ARTIFACT_FILES = (
     "utility_matrix.npz",
     "item_similarity.npz",
     "movie_id_maps.pkl",
+    "cf_build_meta.json",
 )
 
 
@@ -53,16 +54,17 @@ def load_data():
     return movies, ratings_cf
 
 
-@st.cache_data(show_spinner=True, hash_funcs={Path: lambda _: 0})
-def load_cf_cached(_artifacts_dir: Path, _mtime: float, _n_ratings: int = -1):
+@st.cache_data(show_spinner=True)
+def load_cf_cached(_artifacts_dir: Path, mtime: float, n_ratings: int = -1):
     """Load CF artifacts if present. Returns None when not built yet.
 
-    Cache key includes the artifact file mtime: if Loan rebuilds
-    `item_similarity.npz` after the first call, the next interaction picks
-    up the new artifacts instead of returning the cached `None`. Pass the
-    real mtime (from `_cf_artifact_mtime()`) at the call site.
+    Cache key includes `mtime` + `n_ratings` (non-underscore so Streamlit
+    actually hashes them): if Loan rebuilds `item_similarity.npz` after the
+    first call, the next interaction picks up the new artifacts instead of
+    returning the cached `None`. Pass the real mtime (from
+    `_cf_artifact_mtime()`) at the call site.
 
-    `_n_ratings` (len of current ratings_cf) is checked against cf_build_meta
+    `n_ratings` (len of current ratings_cf) is checked against cf_build_meta
     so a rebuilt parquet with stale artifacts falls back to Simple.
 
     Partial/corrupt artifact sets return None (Simple fallback) instead of
@@ -73,7 +75,7 @@ def load_cf_cached(_artifacts_dir: Path, _mtime: float, _n_ratings: int = -1):
     try:
         from recommender_cf import load_cf_artifacts
 
-        expected = _n_ratings if _n_ratings >= 0 else None
+        expected = n_ratings if n_ratings >= 0 else None
         return load_cf_artifacts(expected_n_ratings=expected)
     except (FileNotFoundError, OSError, ValueError):
         return None

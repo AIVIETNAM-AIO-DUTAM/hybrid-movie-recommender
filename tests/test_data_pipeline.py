@@ -85,3 +85,35 @@ def test_d3_ratings_filtered_and_dtype():
 
     assert ratings.duplicated(subset=["userId", "movieId"]).sum() == 0
     assert ((ratings["rating"] >= 0.5) & (ratings["rating"] <= 5.0)).all()
+
+
+def test_load_processed_alias_content_drift(tmp_path, monkeypatch):
+    """I6: ratings_clean.parquet with same row count but different content
+    must be rejected — row-count-only checks miss content drift."""
+    import data_processing as dp
+
+    movies = pd.DataFrame(
+        [
+            {"movieId": 1, "title": "A (2000)", "genres": "Drama",
+             "year": 2000, "genres_list": ["Drama"], "genres_text": "Drama"}
+        ]
+    )
+    cf = pd.DataFrame(
+        [
+            {"userId": 1, "movieId": 1, "rating": 4.0, "timestamp": 100},
+            {"userId": 2, "movieId": 1, "rating": 5.0, "timestamp": 200},
+        ]
+    )
+    content = cf.copy()
+
+    monkeypatch.setattr(dp, "PROCESSED_DIR", tmp_path)
+    dp.save_processed(movies, cf, content)
+
+    # Corrupt the alias in place: same row count, different rating value.
+    alias = tmp_path / "ratings_clean.parquet"
+    drifted = cf.copy()
+    drifted.loc[0, "rating"] = 1.0
+    drifted.to_parquet(alias, index=False)
+
+    with pytest.raises(ValueError, match="content drifted"):
+        dp.load_processed()

@@ -69,6 +69,14 @@ def _resolve_index(model: ContentModel, movie: Union[int, str]) -> int:
         if not hits:
             raise ValueError(f"movieId not found: {movie}")
         return hits[0]
+    # A numeric-looking string is almost always a movieId typed by accident
+    # ("12" -> movieId 12, not the title "12 Angry Men"). Resolve it as an
+    # ID when one exists so we never silently recommend a different movie.
+    if isinstance(movie, str) and movie.strip().isdigit():
+        hits = movies.index[movies["movieId"] == int(movie)].tolist()
+        if hits:
+            return hits[0]
+        raise ValueError(f"movieId not found: {movie}")
     # Exact match first — deterministic and unambiguous.
     exact = movies.index[movies["title"] == movie].tolist()
     if exact:
@@ -166,4 +174,7 @@ def genre_overlap_at_k(
         cand = {g for g in str(genres).split("|") if g and g != NO_GENRES_SENTINEL}
         if input_set & cand:
             hits += 1
-    return hits / len(top)
+    # Denominator = number of rows actually ranked (could be < k on small
+    # catalogs). Using len(top) silently inflates the fraction toward 1.0
+    # when fewer than k movies exist, masking partial coverage.
+    return hits / min(k, len(top))

@@ -125,14 +125,14 @@ Score cho mỗi candidate movie = `(liked_mask @ item_similarity)` (sparse matmu
 
 | Metric | Value | Sample size | Notes |
 |--------|-------|-------------|-------|
-| HR@10 | 0.01 | 200 | leave-last-out by timestamp; evaluated users that CF could score |
-| NDCG@10 | 0.0072 | 200 | same sample |
-| HR@10_all | 0.01 | 200 | includes cold-start / no-candidate users in denominator |
-| NDCG@10_all | 0.0072 | 200 | same |
+| HR@10 | 0.02 | 200 | leave-last-out by timestamp; evaluated users that CF could score |
+| NDCG@10 | 0.0141 | 200 | same sample |
+| HR@10_all | 0.02 | 200 | includes cold-start / no-candidate users in denominator |
+| NDCG@10_all | 0.0141 | 200 | same |
 
 Nguồn: `reports/cf_evaluation.md` / `evaluation/cf_eval_scores.csv`.
 
-> HR@10 = 0.01 thấp — đặc trưng cho item-based CF leave-last-out trên MovieLens 25M khi chưa tune `min_rating` / neighbor top-K. Đường cải thiện: tăng `top_k` của item similarity, giảm `min_rating` để mở rộng pool liked items, hoặc thử user-based CF.
+> HR@10 = 0.02 thấp — đặc trưng cho item-based CF leave-last-out trên MovieLens 25M khi chưa tune `min_rating` / neighbor top-K. Đường cải thiện: tăng `top_k` của item similarity, giảm `min_rating` để mở rộng pool liked items, hoặc thử user-based CF.
 
 ## 6. So sánh 3 phương pháp
 

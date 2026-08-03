@@ -1,24 +1,25 @@
 [
-    {
-        "model": "KNN_CF",
-        "top_k": 10,
-        "positive_threshold": 4.0,
-        "evaluated_users": 100,
-        "precision@10": 0.07300000000000001,
-        "recall@10": 0.09811429520152051,
-        "hit_rate@10": 0.46,
-        "average_matches": 0.73,
-        "average_truth_items": 13.01
-    },
-    {
-        "model": "KNN_CONTENT",
-        "top_k": 10,
-        "positive_threshold": 4.0,
-        "evaluated_users": 100,
-        "precision@10": 0.0030000000000000005,
-        "recall@10": 0.001101190476190476,
-        "hit_rate@10": 0.02,
-        "average_matches": 0.03,
-        "average_truth_items": 13.01
-    }
+  {
+    "_note": "PROTOCOL: multi-item truth set per user (KNN models). NOT leave-last-out — do not compare hit_rate@10 with evaluation/cf_eval_scores.csv HR@10. Regenerate: python scripts/run_model_evaluation.py",
+    "model": "KNN_CF",
+    "top_k": 10,
+    "positive_threshold": 4.0,
+    "evaluated_users": 100,
+    "precision@10": 0.07300000000000001,
+    "recall@10": 0.09811429520152051,
+    "hit_rate@10": 0.46,
+    "average_matches": 0.73,
+    "average_truth_items": 13.01
+  },
+  {
+    "model": "KNN_CONTENT",
+    "top_k": 10,
+    "positive_threshold": 4.0,
+    "evaluated_users": 100,
+    "precision@10": 0.0030000000000000005,
+    "recall@10": 0.001101190476190476,
+    "hit_rate@10": 0.02,
+    "average_matches": 0.03,
+    "average_truth_items": 13.01
+  }
 ]

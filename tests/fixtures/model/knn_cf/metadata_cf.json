@@ -1,0 +1,6 @@
+{
+  "model_name": "Fixture KNN CF",
+  "num_movies": 6,
+  "num_users": 6,
+  "num_ratings": 18
+}

@@ -180,6 +180,34 @@ def test_genre_overlap_at_k_none_share():
     assert genre_overlap_at_k(recs, "Animation|Children", k=2) == 0.0
 
 
+def test_genre_overlap_at_k_fewer_rows_than_k_uses_min_denominator():
+    """I1: with only 2 rows but k=10, partial coverage must not saturate to 1.0.
+
+    If the denominator were len(top)=2, 2/2=1.0 would falsely claim full
+    top-10 coverage. Denominator must be min(k, len(top)).
+    """
+    recs = pd.DataFrame(
+        [
+            {"movieId": 2, "title": "Jumanji (1995)", "genres": "Adventure|Children|Fantasy"},
+            {"movieId": 99, "title": "No Share", "genres": "Horror"},
+        ]
+    )
+    # 1 of 2 share Adventure -> 0.5, NOT 1.0.
+    assert genre_overlap_at_k(recs, "Adventure", k=10) == 0.5
+
+
+def test_content_numeric_string_resolves_as_movie_id(tiny_movies):
+    """I2: "1" must resolve to movieId 1, not a title whose name is numeric."""
+    model = build_content_model(tiny_movies)
+    out = recommend_similar_movies(model, "1", top_k=2)
+    assert set(out["movieId"]).isdisjoint({1})
+
+    # A numeric string with no matching movieId must raise, not fall through
+    # to a title match (which could silently pick a different movie).
+    with pytest.raises(ValueError, match="movieId not found"):
+        recommend_similar_movies(model, "999999", top_k=2)
+
+
 def test_hr_ndcg_helpers():
     assert hit_rate_at_k([10, 20, 30], 20, k=10) == 1.0
     assert hit_rate_at_k([10, 20, 30], 99, k=10) == 0.0
