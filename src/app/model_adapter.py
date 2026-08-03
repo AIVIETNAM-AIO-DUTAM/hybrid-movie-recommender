@@ -171,6 +171,32 @@ def get_user_options(
     return [int(user_id) for user_id in user_ids]
 
 
+def _simple_fallback_rows(
+    movies: pd.DataFrame,
+    ratings: pd.DataFrame,
+    top_k: int,
+) -> pd.DataFrame:
+    """Cold-start fallback: top movies by weighted rating (Simple recommender).
+
+    Mirrors the 3-tab app (src/app.py `_fallback_simple`) so the hybrid UI
+    never shows an empty panel when a user has no CF/content signal.
+    """
+    from recommender_simple import build_movie_stats, recommend_top_movies
+
+    stats = build_movie_stats(ratings)
+    simple = recommend_top_movies(movies, stats, top_k=top_k)
+    simple = simple.rename(
+        columns={
+            "avg_rating": "rating",
+            "weighted_rating": "model_score",
+        }
+    )
+    simple["model_score"] = simple["model_score"].astype(float)
+    simple = simple[["movieId", "title", "genres", "rating", "num_ratings", "model_score"]]
+    simple.insert(0, "rank", range(1, len(simple) + 1))
+    return simple.reset_index(drop=True)
+
+
 def predict(
     user_id: int,
     movies: pd.DataFrame,
@@ -240,17 +266,10 @@ def predict(
     ]
 
     if not ranked_movie_ids:
-        return pd.DataFrame(
-            columns=[
-                "rank",
-                "movieId",
-                "title",
-                "genres",
-                "rating",
-                "num_ratings",
-                "model_score",
-            ]
-        )
+        # Cold-start: user has no hybrid signal (empty history, nothing liked,
+        # or zero candidates). Fall back to Simple top-K so the UI never shows
+        # an empty panel — mirrors the 3-tab app's fallback behavior.
+        return _simple_fallback_rows(movies, ratings, top_k)
 
     movie_stats = (
         ratings.groupby("movieId")
@@ -274,6 +293,22 @@ def predict(
         .merge(movies, on="movieId", how="left")
         .merge(movie_stats, on="movieId", how="left")
     )
+    # Hybrid movie IDs can come from CF/content artifacts built on a different
+    # parquet version. Left-merge then silently displays NaN title/genres —
+    # drop orphan rows and surface the count (mirrors recommender_cf's orphan
+    # warning instead of showing blank rows).
+    orphan_mask = output["title"].isna()
+    n_orphans = int(orphan_mask.sum())
+    if n_orphans:
+        import warnings
+
+        warnings.warn(
+            f"predict: dropped {n_orphans} hybrid candidate movieId(s) "
+            "not present in movies_clean.parquet",
+            UserWarning,
+            stacklevel=2,
+        )
+        output = output[~orphan_mask]
     output.insert(0, "rank", range(1, len(output) + 1))
     output["rating"] = output["rating"].fillna(0.0)
     output["num_ratings"] = output["num_ratings"].fillna(0).astype(int)

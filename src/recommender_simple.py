@@ -9,6 +9,10 @@ import pandas as pd
 
 def build_movie_stats(ratings: pd.DataFrame, m_quantile: float = 0.80) -> pd.DataFrame:
     """Compute avg_rating, num_ratings, weighted_rating per movieId."""
+    if ratings.empty:
+        raise ValueError("ratings DataFrame is empty; cannot compute movie stats")
+    if ratings["rating"].isna().all():
+        raise ValueError("ratings column is all-NaN; cannot compute movie stats")
     stats = (
         ratings.groupby("movieId")
         .agg(avg_rating=("rating", "mean"), num_ratings=("rating", "count"))

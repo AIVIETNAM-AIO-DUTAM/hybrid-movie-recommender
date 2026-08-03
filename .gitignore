@@ -22,12 +22,19 @@ data/processed/*.parquet
 *.npz
 *.pkl
 *.parquet
+!tests/fixtures/**/*.joblib
+!tests/fixtures/**/*.npz
+!tests/fixtures/**/*.pkl
+!tests/fixtures/**/*.parquet
 
 # OS / IDE
 .DS_Store
 .idea/
 .vscode/
 *.swp
+
+# Local tool config (not part of the repo)
+.commandcode/
 
 # Reports with secrets or personal notes (optional keep)
 # reports/*.md
@@ -41,3 +48,4 @@ reports/charts/
 # Eval CSV (regenerate)
 reports/cf_eval_scores.csv
 model/
+!tests/fixtures/model/

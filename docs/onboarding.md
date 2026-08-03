@@ -7,10 +7,17 @@ Mở folder `Module 2` trong Cursor/VS Code.
 ## 2. Setup môi trường
 
 ```bash
+git lfs install                      # one-time per machine
+git lfs pull                         # fetch tests/fixtures/data/processed/*.parquet
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+> **LFS required** để chạy được `pytest tests/` (các test D1–D3 và A1 đọc parquet
+> fixtures từ `tests/fixtures/data/processed/`). Không có LFS thì file sẽ là 130-byte
+> pointer text và `pd.read_parquet()` sẽ raise `ArrowInvalid`.
+> Fallback: `python tests/fixtures/build_test_assets.py` để regenerate fixtures từ CSV.
 
 ## 3. Nhận role
 
