@@ -15,6 +15,19 @@ st.title("Movie Recommendation System")
 st.caption("Simple · Content-based · Collaborative Filtering")
 
 ARTIFACTS_DIR = ROOT / "artifacts"
+PROCESSED_MOVIES = ROOT / "data" / "processed" / "movies_clean.parquet"
+CF_ARTIFACT_FILES = (
+    "utility_matrix.npz",
+    "item_similarity.npz",
+    "movie_id_maps.pkl",
+    "cf_build_meta.json",
+)
+
+
+def _cf_artifacts_ready(artifacts_dir: Path | None = None) -> bool:
+    """True only when all three CF artifact files exist."""
+    prefix = artifacts_dir or ARTIFACTS_DIR
+    return all((prefix / name).exists() for name in CF_ARTIFACT_FILES)
 
 
 def _cf_artifact_mtime() -> float:
@@ -27,31 +40,50 @@ def _cf_artifact_mtime() -> float:
     return p.stat().st_mtime if p.exists() else 0.0
 
 
+def _movies_parquet_mtime() -> float:
+    """mtime of movies_clean.parquet — busts content-model cache on rebuild."""
+    return PROCESSED_MOVIES.stat().st_mtime if PROCESSED_MOVIES.exists() else 0.0
+
+
 @st.cache_data(show_spinner=True)
 def load_data():
+    """Load movies + CF ratings (ignore content-split ratings for the 3-tab app)."""
     from data_processing import load_processed
 
-    return load_processed()
-
-
-@st.cache_data(show_spinner=True, hash_funcs={Path: lambda _: 0})
-def load_cf_cached(_artifacts_dir: Path, _mtime: float):
-    """Load CF artifacts if present. Returns None when not built yet.
-
-    Cache key includes the artifact file mtime: if Loan rebuilds
-    `item_similarity.npz` after the first call, the next interaction picks
-    up the new artifacts instead of returning the cached `None`. Pass the
-    real mtime (from `_cf_artifact_mtime()`) at the call site.
-    """
-    if not (ARTIFACTS_DIR / "item_similarity.npz").exists():
-        return None
-    from recommender_cf import load_cf_artifacts
-
-    return load_cf_artifacts()
+    movies, ratings_cf, _ratings_content = load_processed()
+    return movies, ratings_cf
 
 
 @st.cache_data(show_spinner=True)
-def build_content_cached(movies):
+def load_cf_cached(_artifacts_dir: Path, mtime: float, n_ratings: int = -1):
+    """Load CF artifacts if present. Returns None when not built yet.
+
+    Cache key includes `mtime` + `n_ratings` (non-underscore so Streamlit
+    actually hashes them): if Loan rebuilds `item_similarity.npz` after the
+    first call, the next interaction picks up the new artifacts instead of
+    returning the cached `None`. Pass the real mtime (from
+    `_cf_artifact_mtime()`) at the call site.
+
+    `n_ratings` (len of current ratings_cf) is checked against cf_build_meta
+    so a rebuilt parquet with stale artifacts falls back to Simple.
+
+    Partial/corrupt artifact sets return None (Simple fallback) instead of
+    crashing the Streamlit page.
+    """
+    if not _cf_artifacts_ready(ARTIFACTS_DIR):
+        return None
+    try:
+        from recommender_cf import load_cf_artifacts
+
+        expected = n_ratings if n_ratings >= 0 else None
+        return load_cf_artifacts(expected_n_ratings=expected)
+    except (FileNotFoundError, OSError, ValueError):
+        return None
+
+
+@st.cache_data(show_spinner=True)
+def build_content_cached(movies, _movies_mtime: float = 0.0):
+    """Build content model; `_movies_mtime` invalidates cache when parquet changes."""
     from recommender_content import build_content_model
 
     return build_content_model(movies)
@@ -90,7 +122,7 @@ def main() -> None:
     if not processed.exists():
         st.warning(
             "Chưa có `data/processed/*.parquet`. "
-            "Data Engineer chạy: `python scripts/run_pipeline.py` sau khi có CSV trong `data/raw/`."
+            "Data Engineer chạy: `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` sau khi có CSV trong `data/raw/`."
         )
         st.stop()
 
@@ -106,25 +138,36 @@ def main() -> None:
         result = recommend_top_movies(
             movies, stats, top_k=top_k, genre=genre or None
         )
-        st.dataframe(result, use_container_width=True)
+        if result.empty:
+            st.info(
+                "Không có phim khớp bộ lọc genre. Thử genre khác hoặc để trống."
+            )
+        else:
+            st.dataframe(result, use_container_width=True)
 
     with tab_content:
         st.subheader("Similar movies by genre")
         query = st.text_input("movieId hoặc title", value="Toy Story (1995)")
         top_k = st.slider("top_k", 5, 50, 10, key="content_k")
 
-        # Build once per session (cached). Cheap on 62k rows but still wasteful
-        # to redo per click.
-        model = build_content_cached(movies)
+        # Build once per session (cached). mtime busts cache when parquet rebuilds.
+        try:
+            model = build_content_cached(movies, _movies_parquet_mtime())
+        except ValueError as exc:
+            st.error(str(exc))
+            model = None
         from recommender_content import recommend_similar_movies
 
         if st.button("Recommend similar", key="content_btn"):
-            try:
-                movie_key: int | str = int(query) if query.strip().isdigit() else query
-                result = recommend_similar_movies(model, movie_key, top_k=top_k)
-                st.dataframe(result, use_container_width=True)
-            except ValueError as exc:
-                st.error(str(exc))
+            if model is None:
+                st.error("Content model chưa sẵn sàng.")
+            else:
+                try:
+                    movie_key: int | str = int(query) if query.strip().isdigit() else query
+                    result = recommend_similar_movies(model, movie_key, top_k=top_k)
+                    st.dataframe(result, use_container_width=True)
+                except ValueError as exc:
+                    st.error(str(exc))
 
     with tab_cf:
         st.subheader("Personalized for userId")
@@ -134,13 +177,13 @@ def main() -> None:
 
         # Lazy-load artifacts. We pass the file mtime as part of the cache
         # key so a freshly built artifact is picked up without manual cache clear.
-        cf = load_cf_cached(ARTIFACTS_DIR, _cf_artifact_mtime())
+        cf = load_cf_cached(ARTIFACTS_DIR, _cf_artifact_mtime(), len(ratings))
 
         if cf is None:
             _fallback_simple(
                 movies, ratings, top_k,
-                "Chưa build CF artifacts. Loan chạy: `python scripts/build_cf_artifacts.py`. "
-                "Hiện fallback Simple Recommender.",
+                "Chưa build CF artifacts (thiếu hoặc lỗi file). Loan chạy: "
+                "`python scripts/build_hybrid_artifacts.py`. Hiện fallback Simple Recommender.",
             )
         elif st.button("Recommend for user", key="cf_btn"):
             try:

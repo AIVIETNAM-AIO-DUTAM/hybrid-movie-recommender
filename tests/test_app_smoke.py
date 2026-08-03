@@ -1,10 +1,7 @@
 """Streamlit app smoke tests — owned by QA (Kiên).
 
-Cases A1-A2 cover Task T13/T20 deliverables. They are SKIPPED until
-`data/processed/*.parquet` and Streamlit v1 are ready. Streamlit apps
-are hard to unit-test cleanly, so these are intentionally lightweight:
-they verify that imports succeed and the entry function doesn't blow up
-on the missing-data branch.
+Cases A1-A2 cover Task T09/T13/T20 deliverables. Lightweight checks:
+imports succeed and the 3-tab entry path handles missing data cleanly.
 
 For full UX testing, do manual smoke testing in the browser:
 
@@ -22,43 +19,54 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT))  # so `import src.app` works
+sys.path.insert(0, str(ROOT))
 
 
-def _require_processed():
+def test_a1_missing_data_warns_cleanly(monkeypatch):
+    """A1: when parquet is missing, app shows a warning — no traceback."""
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
+
+    # Point ROOT's processed path at an empty temp tree via monkeypatch on
+    # the Path.exists check used inside app.main. Easiest reliable approach:
+    # run the app after temporarily renaming the expected parquet via env-
+    # independent monkeypatch of Path.exists for that specific file.
     processed = ROOT / "data" / "processed" / "movies_clean.parquet"
-    if not processed.exists():
-        pytest.skip(
-            "Parquet missing — Demo v1 (T13) cannot be tested yet. "
-            "Run `python scripts/run_pipeline.py` first."
-        )
+    original_exists = Path.exists
 
+    def fake_exists(self: Path) -> bool:
+        if self.resolve() == processed.resolve():
+            return False
+        return original_exists(self)
 
-def test_a1_missing_data_warns_cleanly(monkeypatch, tmp_path):
-    """A1: when parquet is missing, app shows a warning — no traceback.
+    monkeypatch.setattr(Path, "exists", fake_exists)
 
-    Spec §11 risk: 'Title bị trùng hoặc nhập sai' style edge cases.
-    """
-    # TODO Kiên: implement after T13
-    # Streamlit testing approach:
-    #   from streamlit.testing.v1 import AppTest
-    #   at = AppTest.from_file("src/app.py", default_timeout=10).run()
-    #   assert not at.exception
-    #   assert any("parquet" in w.lower() for w in at.warning)
-    pytest.skip("TODO Kiên: implement after T13 Demo v1")
+    at = AppTest.from_file(str(ROOT / "src" / "app.py"), default_timeout=15).run()
+    assert not at.exception
+    warning_text = " ".join(w.value for w in at.warning).lower()
+    assert "parquet" in warning_text
 
 
 def test_a2_three_tabs_render():
-    """A2: app exposes 3 tabs — Simple / Content / CF.
+    """A2: app exposes 3 tabs — Simple / Content / CF."""
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
 
-    Spec §7: UI 3 tab chính.
-    """
-    _require_processed()
-    # TODO Kiên: implement after T13
-    # from streamlit.testing.v1 import AppTest
-    # at = AppTest.from_file("src/app.py", default_timeout=10).run()
-    # tab_titles = [t.label for t in at.tabs]
-    # assert "Simple Recommender" in tab_titles
-    # assert "Content-based" in tab_titles
-    # assert "Collaborative Filtering" in tab_titles
-    pytest.skip("TODO Kiên: implement after T13 Demo v1")
+    processed = ROOT / "data" / "processed" / "movies_clean.parquet"
+    fixture = ROOT / "tests" / "fixtures" / "data" / "processed" / "movies_clean.parquet"
+    if not processed.exists() and not fixture.exists():
+        pytest.skip(
+            "Parquet missing — run `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` "
+            "or `python tests/fixtures/build_test_assets.py` first."
+        )
+
+    # App hard-codes data/processed; skip A2 when only fixtures exist.
+    if not processed.exists():
+        pytest.skip("Full processed parquet required for A2 tab render smoke.")
+
+    at = AppTest.from_file(str(ROOT / "src" / "app.py"), default_timeout=60).run()
+    assert not at.exception
+    tab_labels = [t.label for t in at.tabs]
+    assert "Simple Recommender" in tab_labels
+    assert "Content-based" in tab_labels
+    assert "Collaborative Filtering" in tab_labels
