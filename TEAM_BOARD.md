@@ -44,6 +44,7 @@
 
 Branch: `fix/sprint-gaps-d8` (đã merge origin/main tại `ccc3fea`). Tests: 32/32 pass.
 Charts: `reports/charts/` (7 PNG). Slides: `reports/sprint_demo_slides.md`.
+Code review D11: 4 parallel reviewers + 1 critical-fix round (stale refs, reproducibility, dead CF tab docs, LFS onboarding, edge-guard count).
 
 ---
 
@@ -97,7 +98,7 @@ Reviewer: code/demo → **Tân Dư** · test/bug → **Hoàng Đức Kiên**
 ## Definition of Done (khớp `document.pdf` mục 14)
 
 - [x] Tài liệu mô tả rõ 3 phương pháp (final_report.md) — 9 section đã điền đủ số liệu D11 03/08
-- [x] Pipeline xử lý movies.csv và ratings.csv (data_processing + run_pipeline.py)
+- [x] Pipeline xử lý movies.csv và ratings.csv (data_processing.run_pipeline())
 - [x] Simple top-K theo `weighted_rating` (lọc `num_ratings >= m`)
 - [x] Content similar + genre explain (+ `genre_overlap_at_k`)
 - [x] CF theo `userId`, không gồm phim đã rating

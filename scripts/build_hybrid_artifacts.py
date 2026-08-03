@@ -16,7 +16,7 @@ What this script does
 Usage
 -----
     source .venv/bin/activate
-    python scripts/build_cf_artifacts.py
+    python scripts/build_hybrid_artifacts.py
 
 Acceptance (Tasks T15 + T17)
 ---------------------------

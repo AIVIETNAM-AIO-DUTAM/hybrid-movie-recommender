@@ -33,7 +33,7 @@ def _movies_path() -> Path:
     if FIXTURE_MOVIES.exists():
         return FIXTURE_MOVIES
     pytest.skip(
-        "Parquet artifacts missing — run `python scripts/run_pipeline.py` "
+        "Parquet artifacts missing — run `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` "
         "or `python tests/fixtures/build_test_assets.py`."
     )
 
@@ -43,7 +43,7 @@ def _ratings_path() -> Path:
         if path.exists():
             return path
     pytest.skip(
-        "Ratings parquet missing — run `python scripts/run_pipeline.py` "
+        "Ratings parquet missing — run `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` "
         "or `python tests/fixtures/build_test_assets.py`."
     )
 

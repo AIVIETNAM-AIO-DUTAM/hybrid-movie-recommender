@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pickle
 import sys
 from html import escape
 from pathlib import Path
@@ -475,6 +476,19 @@ def main() -> None:
             st.session_state.pop("recommendations", None)
             st.session_state.pop("active_user_id", None)
             st.error(f"Lỗi dữ liệu đầu vào: {exc}")
+        except (OSError, pickle.UnpicklingError) as exc:
+            # Corrupt npz/joblib artifacts (truncated download, LFS pointer text, etc.)
+            st.session_state.pop("recommendations", None)
+            st.session_state.pop("active_user_id", None)
+            st.error(
+                "Mô hình bị hỏng hoặc chưa được pull đầy đủ qua Git LFS. "
+                "Chạy `git lfs pull` rồi `python scripts/build_hybrid_artifacts.py`. "
+                f"Chi tiết: {exc}"
+            )
+        except Exception as exc:  # noqa: BLE001 — fallback UI phải không bao giờ crash trang
+            st.session_state.pop("recommendations", None)
+            st.session_state.pop("active_user_id", None)
+            st.error(f"Lỗi không xác định khi sinh recommendation: {exc}")
 
     active_user_id = int(st.session_state.get("active_user_id", user_id))
     history = model_adapter.get_user_context(active_user_id, movies, ratings)

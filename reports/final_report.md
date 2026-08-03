@@ -153,18 +153,20 @@ Tham chiếu PDF mục 3.4.
 
 Owner: **Tân Dư**
 
-- 3 tab Streamlit (`src/app.py` / `src/app/streamlit_app.py`)
+- **Official demo**: `src/app.py` (3 tab Streamlit — Simple / Content / CF). Có behavioral test (`tests/test_app_smoke.py` A1+A2) và là path được cite trong README, slides, DoD.
+- **Parallel UI**: `src/app/streamlit_app.py` (MicroLens UI, Hybrid α-blend). Không có behavioral test (chỉ AST parse guard), phụ thuộc `model/knn_cf/` + `model/knn_content/` artifacts sinh bởi `scripts/build_hybrid_artifacts.py`. Đánh giá offline qua `scripts/run_hybrid_evaluation.py`.
+- **CF tab trong `src/app.py`**: status legacy. Tab vẫn render nhưng `scripts/build_hybrid_artifacts.py` chỉ sinh artifacts cho `src/app/streamlit_app.py` (đường `model/knn_cf/`), không sinh `artifacts/utility_matrix.npz` cho `src/app.py`. → Tab CF trong `src/app.py` gần như luôn fallback về Simple Recommender. Đã ghi nhận là hạn chế sprint này, sẽ unify 2 app sprint sau.
 - Hạn chế (PDF mục 11 rủi ro):
   - Content chỉ có genre → gợi ý thô (cosine = 1.0 cho mọi phim cùng genre)
   - CF cần user có rating → cold-start
   - HR@10 còn thấp → chưa tune hyperparameter
-  - Không có Hybrid / Neural CF (out of scope)
+  - Không có Neural CF (out of scope)
 
 ## 8. Test & Evaluation
 
 Owner: **Hoàng Đức Kiên**
 
-Chiến lược test là unit test (pytest) + manual smoke test trên Streamlit app demo. Tổng cộng có **32 test cases pass 100%** (trước đây 17, sprint này đã bổ sung 15 test edge-guard mới trong `tests/test_edge_guards.py`).
+Chiến lược test là unit test (pytest) + manual smoke test trên Streamlit app demo. Tổng cộng có **32 test cases pass 100%** (trước đây 17, sprint này đã bổ sung 15 test edge-guard mới trong `tests/test_edge_guards.py`; tổng = 17 + 15 = 32).
 
 | Suite | Tests | Pass | Skip | Notes |
 |---|---|---|---|---|
@@ -174,7 +176,7 @@ Chiến lược test là unit test (pytest) + manual smoke test trên Streamlit 
 | Eval helpers | 1 | 1 | 0 | HR@10 / NDCG@10 + leave-last-out timestamp tie determinism |
 | Data pipeline (D) | 3 | 3 | 0 | movies schema, year extract, ratings filter+dtype |
 | App smoke (A) | 2 | 2 | 0 | A1 missing data warns cleanly + A2 three tabs render |
-| Edge guards | 13 | 13 | 0 | CF artifacts meta roundtrip, n_ratings drift, empty input raises… |
+| Edge guards | 15 | 15 | 0 | CF artifacts meta roundtrip, n_ratings drift, empty input raises (×4), orphaned movieIds warns, content self-leak, single-movie empty, leave-last-out determinism, load_processed_missing, load_cf_artifacts_missing_file, streamlit parse guard |
 | **Total** | **32** | **32** | **0** | |
 
 **Bug đã fix trong sprint (từ `reports/test_report.md`):**

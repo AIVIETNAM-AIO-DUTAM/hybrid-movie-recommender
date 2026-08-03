@@ -56,7 +56,7 @@ def test_a2_three_tabs_render():
     fixture = ROOT / "tests" / "fixtures" / "data" / "processed" / "movies_clean.parquet"
     if not processed.exists() and not fixture.exists():
         pytest.skip(
-            "Parquet missing — run `python scripts/run_pipeline.py` "
+            "Parquet missing — run `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` "
             "or `python tests/fixtures/build_test_assets.py` first."
         )
 

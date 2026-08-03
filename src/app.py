@@ -120,7 +120,7 @@ def main() -> None:
     if not processed.exists():
         st.warning(
             "Chưa có `data/processed/*.parquet`. "
-            "Data Engineer chạy: `python scripts/run_pipeline.py` sau khi có CSV trong `data/raw/`."
+            "Data Engineer chạy: `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` sau khi có CSV trong `data/raw/`."
         )
         st.stop()
 
@@ -181,7 +181,7 @@ def main() -> None:
             _fallback_simple(
                 movies, ratings, top_k,
                 "Chưa build CF artifacts (thiếu hoặc lỗi file). Loan chạy: "
-                "`python scripts/build_cf_artifacts.py`. Hiện fallback Simple Recommender.",
+                "`python scripts/build_hybrid_artifacts.py`. Hiện fallback Simple Recommender.",
             )
         elif st.button("Recommend for user", key="cf_btn"):
             try:

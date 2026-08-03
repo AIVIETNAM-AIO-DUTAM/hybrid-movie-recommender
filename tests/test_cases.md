@@ -54,5 +54,5 @@ Mapping implementation:
 
 | ID | Case | Expected | File | Status |
 |----|------|----------|------|--------|
-| E1 | HR@10 > 0 | CF tốt hơn random | scripts/run_evaluation.py | pass (HR@10=0.01 on n=200) |
-| E2 | NDCG@10 > 0 | có ranking chất lượng | scripts/run_evaluation.py | pass (NDCG@10≈0.007) |
+| E1 | HR@10 > 0 | CF tốt hơn random | src/evaluation.py::run_evaluation | pass (HR@10=0.01 on n=200) |
+| E2 | NDCG@10 > 0 | có ranking chất lượng | src/evaluation.py::run_evaluation | pass (NDCG@10≈0.007) |

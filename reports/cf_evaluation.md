@@ -9,7 +9,7 @@ Owner: ML B (Loan) + QA (Kiên) · Status: filled · Last sync: 2026-08-03 (D11)
 | HR@10_all | 0.01 | 200 | includes cold-start / no-candidate users in denominator |
 | NDCG@10_all | 0.0072 | 200 | same |
 
-Source: `evaluation/cf_eval_scores.csv` (produced by `scripts/run_hybrid_evaluation.py`).
+Source: `evaluation/cf_eval_scores.csv` (produced by `src/evaluation.py::run_evaluation()`, gọi qua `scripts/run_cf_evaluation.py`).
 
 > HR@10 trên sample 200 còn thấp — kỳ vọng với item-based CF leave-last-out trên MovieLens 25M khi chưa tune `min_rating` / neighbor top-K. Đường cải thiện cho sprint sau: tăng `top_k` của item similarity (hiện 100 neighbors/item), giảm `min_rating` từ 4.0 xuống 3.5 để mở rộng liked-pool, hoặc thử user-based CF. Dùng notebook `04_cf_experiments.ipynb` để sweep trước khi khóa số cho final report.
 
@@ -19,7 +19,8 @@ Source: `evaluation/cf_eval_scores.csv` (produced by `scripts/run_hybrid_evaluat
 source .venv/bin/activate
 python -c "from src.data_processing import run_pipeline; run_pipeline()"   # nếu chưa có parquet
 python scripts/build_hybrid_artifacts.py    # CF artifacts (top-K sparsified)
-python scripts/run_hybrid_evaluation.py --sample-size 200 --top-k 10
+python scripts/run_cf_evaluation.py --sample-size 200 --top-k 10   # HR@10 / NDCG@10 cho cf_eval_scores.csv
+python scripts/run_hybrid_evaluation.py     # precision/recall/hit_rate cho hybrid (model/knn_cf/)
 ```
 
 `run_evaluation()` (trong `src/evaluation.py`) tự động:

@@ -14,14 +14,14 @@ Mirror của `tests/test_cases.md`. Cập nhật sau khi chạy `pytest tests/ -
 | Eval helpers | 1 (HR/NDCG + leave-last-out tie) | — | 1 | 0 | 0 |
 | Data pipeline (D) | 3 (D1–D3) | 3 | 3 | 0 | 0 |
 | App smoke (A) | 2 (A1, A2) | 2 | 2 | 0 | 0 |
-| Edge guards | 13 | — | 13 | 0 | 0 |
+| Edge guards | 15 | — | 15 | 0 | 0 |
 | **Total** | **32** | **14 + 2 manual** | **32** | **0** | **0** |
 
-\* A2 cần `data/processed/movies_clean.parquet` (đã có sau `run_pipeline.py`). A1 luôn chạy được (monkeypatch missing parquet).
+\* A2 cần `data/processed/movies_clean.parquet` (đã có sau khi chạy `from src.data_processing import run_pipeline; run_pipeline()`). A1 luôn chạy được (monkeypatch missing parquet).
 
 > C1/C2 là test thủ công trên data thật (Toy Story / Heat genre overlap), không trong pytest — dùng tab Content trong `streamlit run src/app.py`.
 
-> Edge guards (`tests/test_edge_guards.py`) bổ sung 13 test mới trong sprint D8–D11: CF artifacts meta roundtrip, n_ratings drift fingerprint, empty input raises, orphaned movieIds warns, content self-leak guard, leave-last-out timestamp determinism, streamlit parse guard.
+> Edge guards (`tests/test_edge_guards.py`) bổ sung 15 test mới trong sprint D8–D11: CF artifacts meta roundtrip, n_ratings drift fingerprint, empty input raises (×4: simple/content/clean/build_utility), orphaned movieIds warns, content self-leak guard, single-movie empty, leave-last-out timestamp determinism, load_processed_missing, load_cf_artifacts_missing_file, streamlit parse guard.
 
 ## Bugs
 

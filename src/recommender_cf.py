@@ -241,7 +241,7 @@ def load_cf_artifacts(
     if missing:
         raise FileNotFoundError(
             f"CF artifacts missing in '{prefix}': {missing}. "
-            "Run scripts/build_cf_artifacts.py to regenerate."
+            "Run scripts/build_hybrid_artifacts.py to regenerate."
         )
     maps = pd.read_pickle(prefix / "movie_id_maps.pkl")
     utility = load_npz(prefix / "utility_matrix.npz")

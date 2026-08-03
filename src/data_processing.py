@@ -255,7 +255,7 @@ def load_processed() -> tuple[
         raise FileNotFoundError(
             "Missing processed data files: "
             + ", ".join(missing)
-            + ". Run `python scripts/run_pipeline.py` after placing CSVs in data/raw/."
+            + ". Run `python -c 'from src.data_processing import run_pipeline; run_pipeline()'` after placing CSVs in data/raw/."
         )
 
     movies = pd.read_parquet(required[0])

@@ -14,10 +14,17 @@ Tài liệu gốc: [`document.pdf`](./document.pdf)
 
 ```bash
 cd "/Users/macbook/Module 2"
+git lfs install                      # one-time per machine — fetch parquet fixtures qua LFS
+git lfs pull                         # pull tests/fixtures/data/processed/*.parquet
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+> **LFS required:** `.parquet` fixtures (dùng bởi `tests/test_data_pipeline.py` D1–D3 và
+> `tests/test_app_smoke.py` A1) được lưu qua Git LFS. Nếu clone mà chưa chạy `git lfs pull`,
+> các file này chỉ là 130-byte pointer text → `pd.read_parquet()` sẽ crash với `ArrowInvalid`.
+> Fallback nếu không có LFS: `python tests/fixtures/build_test_assets.py`.
 
 1. Đọc [`TEAM_BOARD.md`](./TEAM_BOARD.md) — board chung, cập nhật status tại đây
 2. Mở file role của mình trong [`plans/roles/`](./plans/roles/)
