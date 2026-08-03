@@ -27,11 +27,13 @@ Owner: **Trần Hoàng Minh Tâm**
 
 | | Trước filter | Sau filter | % giữ lại |
 |---|---|---|---|
-| Số phim | TBD | TBD | TBD |
-| Số user | TBD | TBD | TBD |
-| Số rating | TBD | TBD | TBD |
-| Sparsity | TBD | TBD | — |
-| Rating mean (C) | TBD | TBD | — |
+| Số phim | 62,423 | 62,423 | 100% |
+| Số user | ~162k | ~162k (CF) | — |
+| Số rating | 25,000,095 | 24,639,412 (CF) / 24,945,390 (content) | 98.56% / 99.78% |
+| Sparsity | — | ~0.9974 (CF) | — |
+| Rating mean (C) | — | 3.5339 | — |
+
+Nguồn: `reports/eda_summary.md` (sau `scripts/run_pipeline.py`).
 
 TODO Tâm: điền bảng trên, copy số từ notebook 02.
 
@@ -61,11 +63,13 @@ Owner: **tran Duong**
 
 | Input | Genre overlap@10 |
 |-------|------------------|
-| Toy Story (1995) | TBD |
-| Heat (1995) | TBD |
-| Pulp Fiction (1994) | TBD |
-| The Matrix (1999) | TBD |
-| Inception (2010) | TBD |
+| Toy Story (1995) | 1.00 |
+| Heat (1995) | 1.00 |
+| Pulp Fiction (1994) | 1.00 |
+| The Matrix (1999) | 1.00 |
+| Inception (2010) | 1.00 |
+
+Nguồn: `genre_overlap_at_k()` trên `movies_clean.parquet` (D8).
 
 TODO Duong: điền bảng trên, copy từ notebook 03.
 
@@ -86,8 +90,10 @@ TODO Loan: điền công thức + mô tả artifact (shape, density) từ `scrip
 
 | Metric | Value | Sample size | Notes |
 |--------|-------|-------------|-------|
-| HR@10 | TBD | 200 | leave-last-out by timestamp |
-| NDCG@10 | TBD | 200 | |
+| HR@10 | 0.01 | 200 | leave-last-out by timestamp |
+| NDCG@10 | 0.0072 | 200 | same sample |
+
+Nguồn: `reports/cf_evaluation.md` / `evaluation/cf_eval_scores.csv`.
 
 TODO Loan: copy từ `reports/cf_evaluation.md`.
 

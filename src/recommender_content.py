@@ -44,8 +44,14 @@ def build_content_model(movies: pd.DataFrame) -> ContentModel:
     # token_pattern=r"\S+" keeps hyphenated genres like "Sci-Fi" as a single
     # token. Default tokenizer "\b\w\w+\b" would split "Sci-Fi" -> ["sci","fi"]
     # and corrupt the vocabulary used by cosine similarity.
+    genres_filled = df["genres_text"].fillna("")
+    if genres_filled.str.strip().eq("").all():
+        raise ValueError(
+            "no genre vocabulary: all movies have empty genres_text; "
+            "cannot build content model"
+        )
     vectorizer = CountVectorizer(token_pattern=r"\S+")
-    genre_matrix = vectorizer.fit_transform(df["genres_text"].fillna(""))
+    genre_matrix = vectorizer.fit_transform(genres_filled)
     # Keep genre_matrix sparse. With MovieLens 25M (~62k movies) a dense
     # (62k x 62k) similarity matrix would need ~30GB RAM, so we compute
     # similarity on-demand per query instead of pre-materializing it.
@@ -105,9 +111,16 @@ def recommend_similar_movies(
     ).ravel()
     scores = scores.astype(float)
     scores[idx] = -1.0  # exclude self
+    # Never return more neighbors than exist excluding self — using top_k
+    # when top_k >= n_movies would leak the query movie (similarity=-1).
+    k = min(top_k, len(scores) - 1)
+    if k <= 0:
+        return pd.DataFrame(
+            columns=["movieId", "title", "genres", "similarity", "shared_genres"]
+        )
     # argsort(-scores) already returns indices in descending-score order
     # (best first). Do NOT append [::-1] — that flips to ascending (worst).
-    top_idx = np.argpartition(-scores, min(top_k, len(scores) - 1))[:top_k]
+    top_idx = np.argpartition(-scores, k - 1)[:k]
     top_idx = top_idx[np.argsort(-scores[top_idx])]
     rows = model.movies.iloc[top_idx][["movieId", "title", "genres"]].copy()
     rows["similarity"] = scores[top_idx]
@@ -122,3 +135,35 @@ def _shared_genres(a: Optional[str], b: Optional[str]) -> str:
     sb = set((b or "").split("|"))
     shared = sorted(sa & sb - {""})
     return "|".join(shared)
+
+
+def genre_overlap_at_k(
+    recommendations: pd.DataFrame,
+    input_genres: str,
+    k: int = 10,
+) -> float:
+    """Fraction of top-K recommendations sharing ≥1 genre with the input.
+
+    Spec §6.2: content-quality metric for genre cosine. Returns 1.0 when every
+    movie in the top-K shares at least one genre with `input_genres`, and 0.0
+    when none do. Empty top-K (or k<=0) returns 0.0.
+    """
+    if k <= 0 or recommendations is None or recommendations.empty:
+        return 0.0
+
+    input_set = {
+        g for g in (input_genres or "").split("|") if g and g != NO_GENRES_SENTINEL
+    }
+    if not input_set:
+        return 0.0
+
+    top = recommendations.head(k)
+    if "genres" not in top.columns:
+        raise ValueError("recommendations must include a 'genres' column")
+
+    hits = 0
+    for genres in top["genres"].fillna(""):
+        cand = {g for g in str(genres).split("|") if g and g != NO_GENRES_SENTINEL}
+        if input_set & cand:
+            hits += 1
+    return hits / len(top)

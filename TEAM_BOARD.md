@@ -31,15 +31,17 @@
 
 ---
 
-## Snapshot hôm nay (D1 24/07)
+## Snapshot hôm nay (D8 31/07)
 
 | Người | Focus hôm nay | Cột | Blocker |
 |-------|---------------|-----|---------|
-| Tân Dư | **T01** setup repo + onboard 5 người | Chưa làm → Đang làm | — |
-| Trần Hoàng Minh Tâm | **T01** phụ setup + load dataset check schema | Chưa làm → Đang làm | — |
-| tran Duong | Đọc stubs Simple/Content, chờ T03 xong parquet | Chưa làm | Chờ T03 |
-| 18- Thanh Loan | Đọc stubs CF, plan artifact | Chưa làm | — |
-| Hoàng Đức Kiên | Đọc test stubs + test_cases.md | Chưa làm | — |
+| Tân Dư | T09 app freeze prep · fix load_processed unpack | Đang làm | — |
+| Trần Hoàng Minh Tâm | Pipeline parquet local OK | Hoàn thành | — |
+| tran Duong | genre_overlap_at_k + overlap bảng report | Hoàn thành | — |
+| 18- Thanh Loan | CF artifacts + eval numbers | Hoàn thành | — |
+| Hoàng Đức Kiên | T11 regression unskip D/A + test_report | Đang làm | — |
+
+Branch gap-fix: `fix/sprint-gaps-d8`
 
 ---
 
@@ -49,17 +51,6 @@
 
 | ID | Task | Assignee | Start | End | Depends | Phase |
 |----|------|----------|-------|-----|---------|-------|
-| T01 | Setup môi trường + onboard + dataset | Tân Dư, Tâm | D1 24/07 | D1 24/07 | — | 1 |
-| T02 | EDA movies + ratings (notebooks 01–02) | Trần Hoàng Minh Tâm | D2 25/07 | D2 25/07 | T01 | 1 |
-| T03 | Clean → parquet + data dictionary | Trần Hoàng Minh Tâm | D3 26/07 | D3 26/07 | T02 | 1 |
-| T04 | Simple Recommender (weighted rating) | tran Duong | D4 27/07 | D5 28/07 | T03 | 1 |
-| T05 | Content-based Recommender (genre cosine) | tran Duong | D4 27/07 | D5 28/07 | T03 | 1 |
-| T06 | CF utility matrix | 18- Thanh Loan | D4 27/07 | D5 28/07 | T03 | 1 |
-| T07 | CF item similarity | 18- Thanh Loan | D6 29/07 | D6 29/07 | T06 | 1 |
-| T08 | CF recommend_for_user() + exclude seen | 18- Thanh Loan | D6 29/07 | D7 30/07 | T07 | 1 |
-| T09 | App integration 3 tab + cold-start | Tân Dư | D7 30/07 | D8 31/07 | T04, T05, T08 | 1 |
-| T10 | Eval HR@10 / NDCG@10 | 18- Thanh Loan, Hoàng Đức Kiên | D8 31/07 | D9 01/08 | T08 | 1 |
-| T11 | Regression full + bug list | Hoàng Đức Kiên | D9 01/08 | D9 01/08 | T09 | 1 |
 | T12 | Final report (9 section) + genre overlap@K | Cả nhóm | D10 02/08 | D11 03/08 | T11 | 2 |
 | T13 | Charts/analysis notebook + slides | Loan, Kiên, Tân Dư | D11 03/08 | D12 04/08 | T12 | 2 |
 | T14 | Rehearsal + ship | Cả nhóm | D13 05/08 | D14 06/08 | T13 | 2 |
@@ -68,13 +59,21 @@
 
 | ID | Task | Assignee | Note |
 |----|------|----------|------|
-| — | — | — | — |
+| T11 | Regression full + bug list | Kiên | Branch `fix/sprint-gaps-d8` — chờ duyệt trước APP FREEZE |
 
 ### 5. Hoàn thành
 
 | ID | Task | Assignee | Done | Evidence |
 |----|------|----------|------|----------|
 | **Pre-sprint** | Repo scaffold + role files + spec/plan review | Assistant | 22/07 | Stubs + 10 tests xanh |
+| T01 | Setup môi trường + onboard + dataset | Tân Dư, Tâm | 24/07 | README + raw data |
+| T02 | EDA movies + ratings | Tâm | 25/07 | notebooks 01–02, eda_summary |
+| T03 | Clean → parquet + data dictionary | Tâm | 26/07 | ratings_cf / ratings_content parquet |
+| T04 | Simple Recommender | Duong | 28/07 | recommender_simple.py |
+| T05 | Content-based + genre_overlap_at_k | Duong | 31/07 | recommender_content.py |
+| T06–T08 | CF utility / similarity / recommend | Loan | 31/07 | artifacts/*.npz |
+| T09 | App 3 tab + cold-start | Tân Dư | 31/07 | src/app.py |
+| T10 | Eval HR@10 / NDCG@10 | Loan, Kiên | 31/07 | cf_evaluation.md + evaluation/ |
 
 ---
 
@@ -94,15 +93,15 @@ Reviewer: code/demo → **Tân Dư** · test/bug → **Hoàng Đức Kiên**
 
 ## Definition of Done (khớp `document.pdf` mục 14)
 
-- [ ] Tài liệu mô tả rõ 3 phương pháp (final_report.md)
-- [ ] Pipeline xử lý movies.csv và ratings.csv (data_processing + run_pipeline.py)
-- [ ] Simple top-K theo `weighted_rating` (lọc `num_ratings >= m`)
-- [ ] Content similar + genre explain
-- [ ] CF theo `userId`, không gồm phim đã rating
-- [ ] Cold-start → fallback Simple
-- [ ] Streamlit 3 tab
-- [ ] Test report + eval HR@10/NDCG@10 (hoặc sample)
-- [ ] Không OOM (sparse + artifacts)
+- [ ] Tài liệu mô tả rõ 3 phương pháp (final_report.md) — skeleton + số liệu đã điền một phần; prose Phase 2
+- [x] Pipeline xử lý movies.csv và ratings.csv (data_processing + run_pipeline.py)
+- [x] Simple top-K theo `weighted_rating` (lọc `num_ratings >= m`)
+- [x] Content similar + genre explain (+ `genre_overlap_at_k`)
+- [x] CF theo `userId`, không gồm phim đã rating
+- [x] Cold-start → fallback Simple
+- [x] Streamlit 3 tab
+- [x] Test report + eval HR@10/NDCG@10 (hoặc sample)
+- [x] Không OOM (sparse + top-K artifacts)
 
 ---
 

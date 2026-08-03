@@ -23,6 +23,10 @@ def main() -> None:
     movies = loaded_data[0]
     ratings = loaded_data[1]
 
+    if ratings is None or len(ratings) == 0:
+        print("Lỗi: Dữ liệu ratings rỗng — không thể xây dựng CF artifacts.", flush=True)
+        sys.exit(1)
+
     t0 = time.time()
 
     print("Đang xây dựng utility matrix (Task T15)...")
@@ -36,6 +40,9 @@ def main() -> None:
     print(f"-> Utility matrix shape: {shape}, nnz: {nnz}, density: {density:.4f}%")
 
     print("Đang xây dựng ma trận độ tương đồng item-item (Task T17)...")
+    # Default top_k=100 (knn truncate) — required for MovieLens 25M OOM safety.
+    # Pass top_k=0 to build_item_similarity for full dense cosine on tiny data.
+    print("-> item similarity: keeping top_k=100 neighbors per item (OOM guard)")
     item_sim = build_item_similarity(utility)
     
     sim_shape = item_sim.shape
@@ -46,7 +53,7 @@ def main() -> None:
 
     print("Đang khởi tạo CFModel và lưu các artifacts...")
     model = CFModel(utility, item_sim, user_ids, movie_ids, u2r, m2c)
-    save_cf_artifacts(model)
+    save_cf_artifacts(model, n_ratings=len(ratings))
 
     elapsed = time.time() - t0
     print(f"\nHoàn thành xây dựng và lưu CF artifacts trong {elapsed:.2f} giây.")

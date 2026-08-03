@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -13,6 +16,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / "artifacts"
+CF_BUILD_META = "cf_build_meta.json"
+
+
+def _movie_ids_fingerprint(movie_ids: np.ndarray) -> str:
+    """Stable SHA1 over sorted movieIds — detects artifact/catalog drift."""
+    arr = np.asarray(movie_ids, dtype=np.int64)
+    return hashlib.sha1(np.sort(arr).tobytes()).hexdigest()
 
 
 @dataclass
@@ -26,6 +36,8 @@ class CFModel:
 
 
 def build_utility_matrix(ratings: pd.DataFrame) -> tuple[csr_matrix, np.ndarray, np.ndarray, dict, dict]:
+    if ratings.empty:
+        raise ValueError("ratings DataFrame is empty; cannot build utility matrix")
     user_cats = ratings["userId"].astype("category")
     movie_cats = ratings["movieId"].astype("category")
     user_ids = user_cats.cat.categories.to_numpy()
@@ -39,35 +51,53 @@ def build_utility_matrix(ratings: pd.DataFrame) -> tuple[csr_matrix, np.ndarray,
     return utility, user_ids, movie_ids, user_to_row, movie_to_col
 
 
-def build_item_similarity(utility: csr_matrix) -> csr_matrix:
+def build_item_similarity(
+    utility: csr_matrix,
+    top_k: int = 100,
+    chunk_size: int = 512,
+) -> csr_matrix:
     """Item-item cosine similarity, returned as sparse CSR.
 
     Memory note (spec §11 OOM risk):
-    On MovieLens 25M (~62k movies, ~162k users) the cosine similarity matrix
-    is (62k x 62k). Even with `dense_output=False`, scipy CSR overhead is
-    ~16 bytes/nnz vs 8 bytes for dense float64 — if the matrix is more than
-    ~50% dense the sparse form is LARGER than dense. Empirically item
-    similarity can reach 30-80% density, risking OOM on machines with <32 GB.
+    On MovieLens 25M the full (n_movies x n_movies) similarity can OOM.
+    This implementation applies the standard kNN-CF mitigation: compute
+    cosine in row chunks and keep only the top-`top_k` neighbors per item
+    (self excluded). nnz is bounded by O(n_movies * top_k).
 
-    Mitigations (apply at artifact-build time in scripts/build_cf_artifacts.py):
-      1. Pre-filter ratings harder before build_utility_matrix:
-         min_user=50, min_movie=200 (drops long-tail items that create
-         high-density noise).
-      2. Threshold the similarity matrix: keep only top-K neighbors per item
-         (e.g. `argpartition` per row, zero out the rest) — this is the
-         standard kNN-CF pattern and bounds nnz to O(n_movies * k).
-      3. If still OOM: sample users (e.g. random 50k users) for the utility
-         matrix; CF still works, just less coverage.
-      4. Last resort: chunk the similarity computation (process N items at a
-         time) and `hstack` the sparse blocks.
-
-    The current implementation keeps the simple `cosine_similarity(utility.T)`
-    form because it is correct and matches the spec pseudocode (§13.4). Loan
-    should apply mitigation #1 and #2 on the 25M dataset if memory pressure
-    appears during T07.
+    Pass `top_k=0` to keep the full sparse cosine (tests / tiny fixtures).
     """
+    from scipy.sparse import lil_matrix
+
     item_user = utility.T.tocsr()
-    return cosine_similarity(item_user, dense_output=False)
+    n_items = item_user.shape[0]
+    if n_items == 0:
+        raise ValueError("utility matrix has 0 items; cannot build item similarity")
+
+    if top_k <= 0 or top_k >= n_items:
+        return cosine_similarity(item_user, dense_output=False).tocsr()
+
+    # lil_matrix is efficient for incremental row writes; convert to CSR at end.
+    sim = lil_matrix((n_items, n_items), dtype=np.float32)
+    k = min(top_k, n_items - 1)
+
+    for start in range(0, n_items, chunk_size):
+        end = min(start + chunk_size, n_items)
+        # Dense (chunk x n_items) block — chunk_size keeps peak RAM bounded.
+        block = cosine_similarity(item_user[start:end], item_user, dense_output=True)
+        for local_i, row in enumerate(block):
+            global_i = start + local_i
+            row[global_i] = -1.0  # exclude self
+            if k == 1:
+                nn = np.array([int(np.argmax(row))])
+            else:
+                nn = np.argpartition(-row, k)[:k]
+            nn = nn[row[nn] > 0]
+            if len(nn) == 0:
+                continue
+            sim.rows[global_i] = nn.tolist()
+            sim.data[global_i] = row[nn].astype(np.float32).tolist()
+
+    return sim.tocsr()
 
 
 def build_cf_model(ratings: pd.DataFrame) -> CFModel:
@@ -148,14 +178,34 @@ def recommend_for_user(
 
     rec_movie_ids = model.movie_ids[top_cols]
     out = movies[movies["movieId"].isin(rec_movie_ids)].copy()
+    # Detect orphaned movie IDs — present in model but missing from movies DataFrame.
+    matched_ids = set(out["movieId"])
+    orphaned = [int(mid) for mid in rec_movie_ids if int(mid) not in matched_ids]
+    if orphaned:
+        warnings.warn(
+            f"recommend_for_user: {len(orphaned)} movie ID(s) in CF model not found in "
+            f"movies DataFrame and were dropped: {orphaned}",
+            UserWarning,
+            stacklevel=2,
+        )
+        out.attrs["orphaned_movie_ids"] = orphaned
     score_map = {int(mid): float(scores[col]) for mid, col in zip(rec_movie_ids, top_cols)}
     out["score"] = out["movieId"].map(score_map)
     out["method"] = "Collaborative Filtering"
     cols = ["movieId", "title", "genres", "score", "method"]
-    return out.sort_values("score", ascending=False).head(top_k)[cols].reset_index(drop=True)
+    result = (
+        out.sort_values("score", ascending=False).head(top_k)[cols].reset_index(drop=True)
+    )
+    if orphaned:
+        result.attrs["orphaned_movie_ids"] = orphaned
+    return result
 
 
-def save_cf_artifacts(model: CFModel, prefix: Path | None = None) -> None:
+def save_cf_artifacts(
+    model: CFModel,
+    prefix: Path | None = None,
+    n_ratings: int | None = None,
+) -> None:
     prefix = prefix or ARTIFACTS
     prefix.mkdir(parents=True, exist_ok=True)
     save_npz(prefix / "utility_matrix.npz", model.utility)
@@ -169,14 +219,72 @@ def save_cf_artifacts(model: CFModel, prefix: Path | None = None) -> None:
         },
         prefix / "movie_id_maps.pkl",
     )
+    # Fingerprint so load can detect stale artifacts vs rebuilt parquet.
+    meta = {
+        "n_users": int(len(model.user_ids)),
+        "n_items": int(len(model.movie_ids)),
+        "n_ratings": int(
+            n_ratings if n_ratings is not None else model.utility.nnz
+        ),
+        "movie_ids_sha1": _movie_ids_fingerprint(model.movie_ids),
+    }
+    (prefix / CF_BUILD_META).write_text(json.dumps(meta, indent=2) + "\n")
 
 
-def load_cf_artifacts(prefix: Path | None = None) -> CFModel:
+def load_cf_artifacts(
+    prefix: Path | None = None,
+    expected_n_ratings: int | None = None,
+) -> CFModel:
     prefix = prefix or ARTIFACTS
+    required = ["utility_matrix.npz", "item_similarity.npz", "movie_id_maps.pkl"]
+    missing = [f for f in required if not (prefix / f).exists()]
+    if missing:
+        raise FileNotFoundError(
+            f"CF artifacts missing in '{prefix}': {missing}. "
+            "Run scripts/build_cf_artifacts.py to regenerate."
+        )
     maps = pd.read_pickle(prefix / "movie_id_maps.pkl")
+    utility = load_npz(prefix / "utility_matrix.npz")
+    item_similarity = load_npz(prefix / "item_similarity.npz")
+    n_users = len(maps["user_ids"])
+    n_items = len(maps["movie_ids"])
+    if utility.shape != (n_users, n_items):
+        raise ValueError(
+            f"utility_matrix shape {utility.shape} does not match "
+            f"expected ({n_users}, {n_items}) from movie_id_maps.pkl"
+        )
+    if item_similarity.shape != (n_items, n_items):
+        raise ValueError(
+            f"item_similarity shape {item_similarity.shape} does not match "
+            f"expected ({n_items}, {n_items}) from movie_id_maps.pkl"
+        )
+    meta_path = prefix / CF_BUILD_META
+    if meta_path.exists():
+        meta = json.loads(meta_path.read_text())
+        if int(meta.get("n_users", -1)) != n_users or int(meta.get("n_items", -1)) != n_items:
+            raise ValueError(
+                f"{CF_BUILD_META} counts ({meta.get('n_users')}, {meta.get('n_items')}) "
+                f"do not match maps ({n_users}, {n_items}). Rebuild CF artifacts."
+            )
+        expected_fp = meta.get("movie_ids_sha1")
+        actual_fp = _movie_ids_fingerprint(maps["movie_ids"])
+        if expected_fp and expected_fp != actual_fp:
+            raise ValueError(
+                f"{CF_BUILD_META} movie_ids fingerprint mismatch "
+                f"(meta={expected_fp[:8]}… vs maps={actual_fp[:8]}…). "
+                "Rebuild CF artifacts after regenerating processed data."
+            )
+        # Detect stale artifacts vs rebuilt ratings parquet.
+        if expected_n_ratings is not None and "n_ratings" in meta:
+            if int(meta["n_ratings"]) != int(expected_n_ratings):
+                raise ValueError(
+                    f"{CF_BUILD_META} n_ratings={meta['n_ratings']} does not match "
+                    f"current ratings ({expected_n_ratings} rows). "
+                    "Rebuild CF artifacts after regenerating processed data."
+                )
     return CFModel(
-        utility=load_npz(prefix / "utility_matrix.npz"),
-        item_similarity=load_npz(prefix / "item_similarity.npz"),
+        utility=utility,
+        item_similarity=item_similarity,
         user_ids=maps["user_ids"],
         movie_ids=maps["movie_ids"],
         user_to_row=maps["user_to_row"],

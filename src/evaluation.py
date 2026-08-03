@@ -9,8 +9,20 @@ import pandas as pd
 
 
 def leave_last_out_split(ratings: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Per-user: latest timestamp → test, rest → train."""
-    ordered = ratings.sort_values(["userId", "timestamp"])
+    """Per-user: latest timestamp → test, rest → train.
+
+    Sort key is (userId, timestamp, movieId) with a stable mergesort so that
+    ties on timestamp always resolve to the same movieId regardless of the
+    original row order in the DataFrame.
+
+    Users with exactly one rating contribute their single row to TEST only;
+    they have no train ratings and therefore become CF cold-start users
+    (KeyError inside evaluate()). These users are still counted in the
+    HR@10_all denominator — only the narrower HR@10 metric excludes them.
+    """
+    ordered = ratings.sort_values(
+        ["userId", "timestamp", "movieId"], kind="mergesort"
+    )
     test = ordered.groupby("userId", as_index=False).tail(1)
     train = ordered.drop(index=test.index)
     return train.reset_index(drop=True), test.reset_index(drop=True)
@@ -66,6 +78,11 @@ def prepare_eval(
     Returns (cf_model, test_df, truth_by_user). Call this once, then run
     `evaluate(...)` many times with different sample/top_k/min_rating without
     rebuilding the CF model (which is the expensive step on MovieLens 25M).
+
+    **CF model is always built on the FULL train split** (all rows except the
+    per-user held-out last rating). The `sample_size` parameter on
+    `run_evaluation` / `evaluate` only controls how many users are drawn for
+    the recommend-and-score loop — it does NOT reduce the training data.
     """
     from recommender_cf import build_cf_model
 
@@ -135,18 +152,14 @@ def run_evaluation(
       3. for each sampled user, recommend top_k; check if the held-out
          movieId is in the list
 
-    `sample_size` keeps evaluation tractable on MovieLens 25M; pass None
-    to evaluate over every user in the train set (slow).
+    `sample_size` only samples users in the recommend/eval loop. It does NOT
+    shrink `prepare_eval`: leave-last-out + `build_cf_model` still run on the
+    FULL train split (memory/time dominate there). Pass None to evaluate every
+    eligible user after the full build (slow on MovieLens 25M).
     """
     cf, test, truth_by_user = prepare_eval(ratings)
 
-    # Eligible = users whose held-out movie still exists in the CF model's
-    # vocabulary (i.e. some user rated it in TRAIN). Filtering on
-    # cf.movie_ids would be tighter but CFModel doesn't expose it cleanly;
-    # using ratings["movieId"].unique() is a superset of train movie_ids
-    # and the per-user try/except in evaluate() handles unknown-movie cold
-    # starts via HR=0 contribution. This is intentionally not the train set
-    # because prepare_eval() doesn't return train here.
+    # Eligible = users whose held-out movie is in the CF train vocabulary.
     cf_movie_ids = set(cf.movie_ids.tolist())
     eligible_users = test.loc[
         test["movieId"].astype(int).isin(cf_movie_ids),

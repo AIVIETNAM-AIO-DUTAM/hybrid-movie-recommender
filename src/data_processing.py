@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Optional
 
@@ -141,10 +142,12 @@ def clean_ratings(
     ]
 
     prev_len = -1
+    stable = False
 
     for _ in range(max_iter):
 
         if len(out) == prev_len:
+            stable = True
             break
 
         prev_len = len(out)
@@ -175,6 +178,21 @@ def clean_ratings(
             out["userId"].isin(valid_users)
         ]
 
+    if not stable:
+        warnings.warn(
+            f"clean_ratings: max_iter={max_iter} reached before the filtered "
+            "set stabilised. Consider raising max_iter or lowering thresholds.",
+            stacklevel=2,
+        )
+
+    if out.empty:
+        raise ValueError(
+            "clean_ratings: all rows were removed by the activity filters "
+            f"(min_user_ratings={min_user_ratings}, "
+            f"min_movie_ratings={min_movie_ratings}). "
+            "Supply a larger dataset or lower the thresholds."
+        )
+
     return out.reset_index(drop=True)
 
 
@@ -197,8 +215,19 @@ def save_processed(
         index=False,
     )
 
+    # Cast dtypes explicitly so parquet round-trip matches the data dictionary
+    # (int32/int32/float32/int64) even after filter/groupby ops.
+    ratings_cf = ratings_cf.astype(RATINGS_DTYPE)
+    ratings_content = ratings_content.astype(RATINGS_DTYPE)
+
     ratings_cf.to_parquet(
         PROCESSED_DIR / "ratings_cf.parquet",
+        index=False,
+    )
+
+    # Alias kept for plan/docs that still refer to ratings_clean.parquet.
+    ratings_cf.to_parquet(
+        PROCESSED_DIR / "ratings_clean.parquet",
         index=False,
     )
 
@@ -216,18 +245,33 @@ def load_processed() -> tuple[
     """
     Load processed datasets.
     """
+    required = [
+        PROCESSED_DIR / "movies_clean.parquet",
+        PROCESSED_DIR / "ratings_cf.parquet",
+        PROCESSED_DIR / "ratings_content.parquet",
+    ]
+    missing = [str(p) for p in required if not p.exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Missing processed data files: "
+            + ", ".join(missing)
+            + ". Run `python scripts/run_pipeline.py` after placing CSVs in data/raw/."
+        )
 
-    movies = pd.read_parquet(
-        PROCESSED_DIR / "movies_clean.parquet"
-    )
+    movies = pd.read_parquet(required[0])
+    ratings_cf = pd.read_parquet(required[1])
+    ratings_content = pd.read_parquet(required[2])
 
-    ratings_cf = pd.read_parquet(
-        PROCESSED_DIR / "ratings_cf.parquet"
-    )
-
-    ratings_content = pd.read_parquet(
-        PROCESSED_DIR / "ratings_content.parquet"
-    )
+    # Alias integrity: ratings_clean.parquet must match ratings_cf when present.
+    alias = PROCESSED_DIR / "ratings_clean.parquet"
+    if alias.exists():
+        n_alias = len(pd.read_parquet(alias, columns=["userId"]))
+        if n_alias != len(ratings_cf):
+            raise ValueError(
+                f"ratings_clean.parquet ({n_alias} rows) drifted from "
+                f"ratings_cf.parquet ({len(ratings_cf)} rows). "
+                "Re-run the pipeline to regenerate both."
+            )
 
     return (
         movies,

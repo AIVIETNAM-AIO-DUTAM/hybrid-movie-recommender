@@ -12,7 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from recommender_simple import build_movie_stats, recommend_top_movies
-from recommender_content import build_content_model, recommend_similar_movies
+from recommender_content import (
+    build_content_model,
+    recommend_similar_movies,
+    genre_overlap_at_k,
+)
 from recommender_cf import build_cf_model, recommend_for_user
 from evaluation import hit_rate_at_k, ndcg_at_k
 
@@ -146,6 +150,34 @@ def test_content_missing_title(tiny_movies):
     model = build_content_model(tiny_movies)
     with pytest.raises(ValueError):
         recommend_similar_movies(model, "Unknown Movie XYZ", top_k=3)
+
+
+def test_genre_overlap_at_k_all_share(tiny_movies):
+    """Spec §6.2: overlap is 1.0 when every top-K shares ≥1 genre with input."""
+    # Construct recommendations that all share Adventure with Toy Story.
+    recs = pd.DataFrame(
+        [
+            {"movieId": 2, "title": "Jumanji (1995)", "genres": "Adventure|Children|Fantasy"},
+            {"movieId": 99, "title": "Fake Adventure", "genres": "Adventure|Comedy"},
+        ]
+    )
+    input_genres = tiny_movies.loc[tiny_movies["title"] == "Toy Story (1995)", "genres"].iloc[0]
+    assert genre_overlap_at_k(recs, input_genres, k=2) == 1.0
+
+    # On the real content model, Toy Story's nearest neighbor (Jumanji) shares genres.
+    model = build_content_model(tiny_movies)
+    live = recommend_similar_movies(model, "Toy Story (1995)", top_k=1)
+    assert genre_overlap_at_k(live, input_genres, k=1) == 1.0
+
+
+def test_genre_overlap_at_k_none_share():
+    recs = pd.DataFrame(
+        [
+            {"movieId": 10, "title": "A", "genres": "Horror"},
+            {"movieId": 11, "title": "B", "genres": "Documentary"},
+        ]
+    )
+    assert genre_overlap_at_k(recs, "Animation|Children", k=2) == 0.0
 
 
 def test_hr_ndcg_helpers():

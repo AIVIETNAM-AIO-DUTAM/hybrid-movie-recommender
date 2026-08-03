@@ -457,14 +457,24 @@ def main() -> None:
         st.session_state.pop("active_user_id", None)
 
     if predict_clicked:
-        st.session_state["active_user_id"] = user_id
-        st.session_state["recommendations"] = model_adapter.predict(
-            user_id=user_id,
-            movies=movies,
-            ratings=ratings,
-            top_k=top_k,
-            model_name=model_name,
-        )
+        try:
+            recs = model_adapter.predict(
+                user_id=user_id,
+                movies=movies,
+                ratings=ratings,
+                top_k=top_k,
+                model_name=model_name,
+            )
+            st.session_state["active_user_id"] = user_id
+            st.session_state["recommendations"] = recs
+        except FileNotFoundError as exc:
+            st.session_state.pop("recommendations", None)
+            st.session_state.pop("active_user_id", None)
+            st.error(f"Không tìm thấy file mô hình: {exc}")
+        except ValueError as exc:
+            st.session_state.pop("recommendations", None)
+            st.session_state.pop("active_user_id", None)
+            st.error(f"Lỗi dữ liệu đầu vào: {exc}")
 
     active_user_id = int(st.session_state.get("active_user_id", user_id))
     history = model_adapter.get_user_context(active_user_id, movies, ratings)
