@@ -220,3 +220,6 @@ Owner: **Tân Dư** + cả nhóm
 - `reports/eda_summary.md` — số liệu EDA
 - `reports/test_report.md` — kết quả test
 - `reports/cf_evaluation.md` — kết quả eval
+- `reports/charts/` — 7 biểu đồ phân tích (HR@10, NDCG@10, model comparison, hybrid alpha sweep, per-user recall, simple top-10, simple top-100 genres)
+- `reports/sprint_demo_slides.md` — slides Marp cho demo ngày 06/08
+- `notebooks/05_evaluation_analysis.ipynb` — notebook sinh charts

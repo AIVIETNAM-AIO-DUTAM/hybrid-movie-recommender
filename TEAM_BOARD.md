@@ -40,8 +40,10 @@
 | tran Duong | T12 final report section 3/4 (Simple/Content) | Hoàn thành | — |
 | 18- Thanh Loan | T12 final report section 5/5.1 (CF + eval) | Hoàn thành | — |
 | Hoàng Đức Kiên | T12 final report section 8 (test/eval) + T11 regression | Hoàn thành | — |
+| Assistant | T13 notebook charts (7 PNG) + slides (Marp) | Hoàn thành | — |
 
 Branch: `fix/sprint-gaps-d8` (đã merge origin/main tại `ccc3fea`). Tests: 32/32 pass.
+Charts: `reports/charts/` (7 PNG). Slides: `reports/sprint_demo_slides.md`.
 
 ---
 
@@ -51,13 +53,13 @@ Branch: `fix/sprint-gaps-d8` (đã merge origin/main tại `ccc3fea`). Tests: 32
 
 | ID | Task | Assignee | Start | End | Depends | Phase |
 |----|------|----------|-------|-----|---------|-------|
-| T14 | Rehearsal + ship | Cả nhóm | D13 05/08 | D14 06/08 | T13 | 2 |
+| — | _(T14 chưa đến window D13-D14)_ | — | — | — | — | — |
 
 ### 2. Đang làm / 3. Đang gặp vấn đề / 4. Chờ duyệt
 
 | ID | Task | Assignee | Note |
 |----|------|----------|------|
-| T13 | Charts/analysis notebook + slides | Loan, Kiên, Tân Dư | Pending — D12 04/08 |
+| T14 | Rehearsal + ship | Cả nhóm | Window D13 05/08 → D14 06/08. Cần PR merge trước |
 
 ### 5. Hoàn thành
 
@@ -74,6 +76,7 @@ Branch: `fix/sprint-gaps-d8` (đã merge origin/main tại `ccc3fea`). Tests: 32
 | T10 | Eval HR@10 / NDCG@10 | Loan, Kiên | 31/07 | cf_evaluation.md + evaluation/ |
 | T11 | Regression full + bug list | Kiên | 03/08 | 32/32 tests pass · reports/test_report.md |
 | T12 | Final report (9 section) + genre overlap@K | Cả nhóm | 03/08 | reports/final_report.md (filled) |
+| T13 | Charts/analysis notebook + slides | Loan, Kiên, Tân Dư | 03/08 | notebooks/05 (7 charts) + reports/sprint_demo_slides.md |
 
 ---
 
