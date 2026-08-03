@@ -27,11 +27,11 @@ Owner: **Trần Hoàng Minh Tâm**
 
 | | Trước filter | Sau filter | % giữ lại |
 |---|---|---|---|
-| Số phim | 62,423 | 62,423 | 100% |
-| Số user | ~162k | ~162k (CF) | — |
-| Số rating | 25,000,095 | 24,639,412 (CF) / 24,945,390 (content) | 98.56% / 99.78% |
-| Sparsity | — | ~0.9974 (CF) | — |
-| Rating mean (C) | — | 3.5339 | — |
+| Số phim | 59.047 | 32.711 (content) - 13.172 (cf) | ~55.4% & ~22.3% |
+| Số user | 162.541 | 162.516 (content) - 162.242 (cf) | ~99.98 & ~ 99.8%|
+| Số rating | 25.000.095 | 24.945.390 (content) - 24.639.412 (cf) | ~99.78% & ~99.56% |
+| Sparsity | ~99.74% | ~99.53% (content) - ~98.847 (cf) | — |
+| Rating mean (C) | ~3.534 | ~3.535 (content) - ~3.54 (cf) | — |
 
 Nguồn: `reports/eda_summary.md` (sau `scripts/run_pipeline.py`).
 
