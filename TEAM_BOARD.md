@@ -31,17 +31,17 @@
 
 ---
 
-## Snapshot hôm nay (D8 31/07)
+## Snapshot hôm nay (D11 03/08)
 
 | Người | Focus hôm nay | Cột | Blocker |
 |-------|---------------|-----|---------|
-| Tân Dư | T09 app freeze prep · fix load_processed unpack | Đang làm | — |
-| Trần Hoàng Minh Tâm | Pipeline parquet local OK | Hoàn thành | — |
-| tran Duong | genre_overlap_at_k + overlap bảng report | Hoàn thành | — |
-| 18- Thanh Loan | CF artifacts + eval numbers | Hoàn thành | — |
-| Hoàng Đức Kiên | T11 regression unskip D/A + test_report | Đang làm | — |
+| Tân Dư | T12 final report sections 1/6/7/9 + integration | Hoàn thành | — |
+| Trần Hoàng Minh Tâm | T12 final report section 2 (dataset) | Hoàn thành | — |
+| tran Duong | T12 final report section 3/4 (Simple/Content) | Hoàn thành | — |
+| 18- Thanh Loan | T12 final report section 5/5.1 (CF + eval) | Hoàn thành | — |
+| Hoàng Đức Kiên | T12 final report section 8 (test/eval) + T11 regression | Hoàn thành | — |
 
-Branch gap-fix: `fix/sprint-gaps-d8`
+Branch: `fix/sprint-gaps-d8` (đã merge origin/main tại `ccc3fea`). Tests: 32/32 pass.
 
 ---
 
@@ -51,15 +51,13 @@ Branch gap-fix: `fix/sprint-gaps-d8`
 
 | ID | Task | Assignee | Start | End | Depends | Phase |
 |----|------|----------|-------|-----|---------|-------|
-| T12 | Final report (9 section) + genre overlap@K | Cả nhóm | D10 02/08 | D11 03/08 | T11 | 2 |
-| T13 | Charts/analysis notebook + slides | Loan, Kiên, Tân Dư | D11 03/08 | D12 04/08 | T12 | 2 |
 | T14 | Rehearsal + ship | Cả nhóm | D13 05/08 | D14 06/08 | T13 | 2 |
 
 ### 2. Đang làm / 3. Đang gặp vấn đề / 4. Chờ duyệt
 
 | ID | Task | Assignee | Note |
 |----|------|----------|------|
-| T11 | Regression full + bug list | Kiên | Branch `fix/sprint-gaps-d8` — chờ duyệt trước APP FREEZE |
+| T13 | Charts/analysis notebook + slides | Loan, Kiên, Tân Dư | Pending — D12 04/08 |
 
 ### 5. Hoàn thành
 
@@ -74,6 +72,8 @@ Branch gap-fix: `fix/sprint-gaps-d8`
 | T06–T08 | CF utility / similarity / recommend | Loan | 31/07 | artifacts/*.npz |
 | T09 | App 3 tab + cold-start | Tân Dư | 31/07 | src/app.py |
 | T10 | Eval HR@10 / NDCG@10 | Loan, Kiên | 31/07 | cf_evaluation.md + evaluation/ |
+| T11 | Regression full + bug list | Kiên | 03/08 | 32/32 tests pass · reports/test_report.md |
+| T12 | Final report (9 section) + genre overlap@K | Cả nhóm | 03/08 | reports/final_report.md (filled) |
 
 ---
 
@@ -93,7 +93,7 @@ Reviewer: code/demo → **Tân Dư** · test/bug → **Hoàng Đức Kiên**
 
 ## Definition of Done (khớp `document.pdf` mục 14)
 
-- [ ] Tài liệu mô tả rõ 3 phương pháp (final_report.md) — skeleton + số liệu đã điền một phần; prose Phase 2
+- [x] Tài liệu mô tả rõ 3 phương pháp (final_report.md) — 9 section đã điền đủ số liệu D11 03/08
 - [x] Pipeline xử lý movies.csv và ratings.csv (data_processing + run_pipeline.py)
 - [x] Simple top-K theo `weighted_rating` (lọc `num_ratings >= m`)
 - [x] Content similar + genre explain (+ `genre_overlap_at_k`)

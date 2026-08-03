@@ -1,6 +1,6 @@
 # Test Report
 
-Owner: QA (Hoàng Đức Kiên) · Status: updated · Last sync: 2026-07-31
+Owner: QA (Hoàng Đức Kiên) · Status: updated · Last sync: 2026-08-03 (D11)
 
 ## Summary
 
@@ -9,16 +9,19 @@ Mirror của `tests/test_cases.md`. Cập nhật sau khi chạy `pytest tests/ -
 | Suite | Tests in code | Cases in `test_cases.md` | Pass | Fail | Skip |
 |-------|---------------|--------------------------|------|------|------|
 | Simple (S) | 3 (S1, S2, S3) | 3 | 3 | 0 | 0 |
-| Content (C) | 4 (C3, C4 + overlap) | 4 (C1/C2 manual) | 4 | 0 | 0 |
-| CF (F) | 4 (F1–F4) | 4 | 4 | 0 | 0 |
-| Eval helpers | 1 | — | 1 | 0 | 0 |
+| Content (C) | 5 (C3, C4, overlap all/none, single movie) | 4 (C1/C2 manual) | 5 | 0 | 0 |
+| CF (F) | 5 (F1–F4 + no-liked-raises) | 4 | 5 | 0 | 0 |
+| Eval helpers | 1 (HR/NDCG + leave-last-out tie) | — | 1 | 0 | 0 |
 | Data pipeline (D) | 3 (D1–D3) | 3 | 3 | 0 | 0 |
-| App smoke (A) | 2 (A1, A2) | 2 | 2* | 0 | 0* |
-| **Total** | **17** | **14 + 2 manual** | **17** | **0** | **0** |
+| App smoke (A) | 2 (A1, A2) | 2 | 2 | 0 | 0 |
+| Edge guards | 13 | — | 13 | 0 | 0 |
+| **Total** | **32** | **14 + 2 manual** | **32** | **0** | **0** |
 
 \* A2 cần `data/processed/movies_clean.parquet` (đã có sau `run_pipeline.py`). A1 luôn chạy được (monkeypatch missing parquet).
 
 > C1/C2 là test thủ công trên data thật (Toy Story / Heat genre overlap), không trong pytest — dùng tab Content trong `streamlit run src/app.py`.
+
+> Edge guards (`tests/test_edge_guards.py`) bổ sung 13 test mới trong sprint D8–D11: CF artifacts meta roundtrip, n_ratings drift fingerprint, empty input raises, orphaned movieIds warns, content self-leak guard, leave-last-out timestamp determinism, streamlit parse guard.
 
 ## Bugs
 
@@ -38,4 +41,5 @@ Mirror của `tests/test_cases.md`. Cập nhật sau khi chạy `pytest tests/ -
 
 - Unskip D1–D3 / A1–A2 hoàn tất trên branch `fix/sprint-gaps-d8`.
 - E1/E2 (HR@10/NDCG@10 > 0) đã có số liệu trong `evaluation/cf_eval_scores.csv` + `reports/cf_evaluation.md`.
-- C1/C2 vẫn manual trên app demo trước APP FREEZE 01/08.
+- C1/C2 vẫn manual trên app demo.
+- Ngày D11 (03/08): merge origin/main vào `fix/sprint-gaps-d8` (commit `ccc3fea`). 32/32 tests pass.
