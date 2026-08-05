@@ -187,6 +187,11 @@ app: integrate simple, content and cf tabs
 | Artifact | `snake_case` + hậu tố rõ nghĩa | `cf_item_similarity.npz`, `movie_index.pkl` |
 | Config | theo default của tool | `requirements.txt`, `.gitignore` |
 
+Root-level exception:
+
+- `README.md`, `TEAM_BOARD.md`, and `document.pdf` are kept at repository root for quick access because they are project-level entry/reference files.
+- Supporting documentation belongs in `docs/`, planning details in `plans/`, and deliverable reports in `reports/`.
+
 Quy tắc chung:
 
 - Tên file/folder không dùng dấu cách.

@@ -2,7 +2,7 @@
 
 ## 1. Clone / mở repo
 
-Mở folder `Module 2` trong Cursor/VS Code.
+Clone repo rồi mở folder `hybrid-movie-recommender` trong Cursor/VS Code.
 
 ## 2. Setup môi trường
 

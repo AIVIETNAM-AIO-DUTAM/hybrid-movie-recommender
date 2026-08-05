@@ -13,7 +13,7 @@ updated: 2026-08-03
 
 ## Mục tiêu
 
-Xây demo gợi ý phim với 3 phương pháp trong scope `document.pdf`:
+Xây demo gợi ý phim với 3 phương pháp trong scope `document.pdf` ở repo root:
 
 1. Simple Recommender
 2. Content-based Recommender
@@ -131,7 +131,7 @@ T03 là bottleneck (T04/T05/T06 phụ thuộc). T06 phải bắt đầu D4 (sớ
 | `tests/test_app_smoke.py` | A1, A2 |
 
 Các test D/A hiện chạy bằng fixture nhỏ trong `tests/fixtures/`, không phụ thuộc
-vào full dataset/model local. Kết quả regression gần nhất: `15 passed`.
+vào full dataset/model local. Kết quả regression gần nhất: `46 passed`.
 
 ## Role files
 
@@ -143,4 +143,4 @@ vào full dataset/model local. Kết quả regression gần nhất: `15 passed`.
 
 ## Acceptance criteria (DoD)
 
-Khớp với `document.pdf` mục 14 (9 criteria). Xem đầy đủ tại `TEAM_BOARD.md`.
+Khớp với root-level spec `document.pdf` mục 14 (9 criteria). Xem board sprint tại root-level `TEAM_BOARD.md`.

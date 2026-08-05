@@ -68,7 +68,7 @@ CSV: [`trello-cards.csv`](./trello-cards.csv)
 
 ## Dataset đã tải
 
-Nguồn: [MovieLens 25M](https://grouplens.org/datasets/movielens/25m/)
+Nguồn: [Kaggle Movie Recommendation System](https://www.kaggle.com/datasets/parasharmanas/movie-recommendation-system?select=movies.csv)
 
 ```text
 data/raw/movies.csv   ~2.9 MB

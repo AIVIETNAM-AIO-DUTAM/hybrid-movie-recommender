@@ -1,13 +1,14 @@
 # Raw dataset
 
-Đã tải sẵn (MovieLens 25M — khớp `document.pdf`):
+Raw dataset dùng cho project là Kaggle Movie Recommendation System
+theo schema MovieLens-style (`movies.csv`, `ratings.csv`):
 
 | File | Size | Schema |
 |------|------|--------|
 | `movies.csv` | ~2.9 MB | `movieId,title,genres` |
 | `ratings.csv` | ~647 MB | `userId,movieId,rating,timestamp` |
 
-Nguồn: https://files.grouplens.org/datasets/movielens/ml-25m.zip
+Nguồn: https://www.kaggle.com/datasets/parasharmanas/movie-recommendation-system?select=movies.csv
 
 > CSV lớn **không** commit git (đã `.gitignore`).
 

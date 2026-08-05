@@ -8,7 +8,7 @@
   <img alt="scikit-learn" src="https://img.shields.io/badge/scikit--learn-KNN%20%2B%20TF--IDF-F7931E">
   <img alt="SciPy" src="https://img.shields.io/badge/SciPy-sparse%20matrix-8CAAE6">
   <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-demo-FF4B4B">
-  <img alt="Pytest" src="https://img.shields.io/badge/Pytest-15%20passed-0A9EDC">
+  <img alt="Pytest" src="https://img.shields.io/badge/Pytest-46%20passed-0A9EDC">
 </p>
 
 `AIO Conquer 2026 · Module 02 · Hybrid Movie Recommender`
@@ -69,7 +69,7 @@ MovieLens CSV
     -> src/data_processing.py
     -> data/processed/*.parquet
     -> scripts/build_hybrid_artifacts.py
-    -> model/knn_cf + model/knn_content
+    -> model/knn_cf + model/knn_content (generated locally, not committed)
     -> src/app/model_adapter.py
     -> src/app/streamlit_app.py
     -> Top-K recommendations
@@ -121,8 +121,8 @@ User selects userId
 │   ├── content_user_metrics.csv
 │   └── model_comparison.csv
 ├── model/
-│   ├── knn_cf/                  # CF KNN model, movie-user matrix, mappings
-│   └── knn_content/             # Content KNN model, TF-IDF matrix, mappings
+│   ├── knn_cf/                  # generated locally by scripts/build_hybrid_artifacts.py
+│   └── knn_content/             # generated locally by scripts/build_hybrid_artifacts.py
 ├── notebooks/
 │   ├── 01_eda_movies.ipynb
 │   ├── 02_eda_ratings.ipynb
@@ -159,11 +159,17 @@ User selects userId
 │   ├── test_recommender.py
 │   ├── test_data_pipeline.py
 │   └── test_app_smoke.py
-├── TEAM_BOARD.md
-├── document.pdf
+├── TEAM_BOARD.md                # root-level project board kept for visibility
+├── document.pdf                 # root-level source spec kept for visibility
 ├── requirements.txt
 └── README.md
 ```
+
+Notes:
+
+- `model/` is ignored by git and is **not expected in a fresh clone**. Create it by running `python scripts/build_hybrid_artifacts.py`.
+- `tests/fixtures/model/` is committed separately as a tiny QA fixture bundle.
+- `TEAM_BOARD.md` and `document.pdf` stay at the repository root intentionally because they are project-level reference files; supporting docs live in `docs/`, planning files in `plans/`, and deliverable reports in `reports/`.
 
 ---
 
@@ -172,7 +178,8 @@ User selects userId
 ### 6.1 Setup environment
 
 ```bash
-cd /Users/duckien/Developer/AIO2026/Conquer_Project/hybrid-movie-recommender
+git clone <repo-url>
+cd hybrid-movie-recommender
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -187,7 +194,7 @@ pip install -r requirements.txt
 
 ### 6.2 Prepare raw data
 
-Download MovieLens 25M and place files here:
+Download the Kaggle movie recommendation dataset and place the CSV files here:
 
 ```text
 data/raw/movies.csv
@@ -197,8 +204,11 @@ data/raw/ratings.csv
 Dataset source:
 
 ```text
-https://files.grouplens.org/datasets/movielens/ml-25m.zip
+https://www.kaggle.com/datasets/parasharmanas/movie-recommendation-system?select=movies.csv
 ```
+
+The project expects the MovieLens-style files `movies.csv` and `ratings.csv`
+with the schema documented in `docs/data-dictionary.md`.
 
 Raw CSV files are large and should not be committed.
 
@@ -235,6 +245,8 @@ Expected artifact folders:
 model/knn_cf/
 model/knn_content/
 ```
+
+These folders are generated outputs and are ignored by git. If they are missing after clone, run the build command above.
 
 Important files:
 
@@ -340,11 +352,14 @@ Current test suite:
 | `tests/test_recommender.py` | Simple, content-based, CF, eval helpers | 10 passed |
 | `tests/test_data_pipeline.py` | Processed fixture schema, year, dtype, rating range, duplicates | 3 passed |
 | `tests/test_app_smoke.py` | App adapter prediction and Streamlit layout import | 2 passed |
+| `tests/test_model_adapter.py` | Hybrid adapter contract, fallback paths | 3 passed |
+| `tests/test_ml_recommenders.py` | ML recommender integration behavior | passed |
+| `tests/test_edge_guards.py` | Regression guards for edge cases | passed |
 
 Latest verified result:
 
 ```text
-15 passed, 3 warnings
+46 passed, 3 warnings
 ```
 
 The warnings come from `joblib` / `numpy` while loading fixture artifacts. They do not fail the tests, but should be monitored when upgrading dependencies.

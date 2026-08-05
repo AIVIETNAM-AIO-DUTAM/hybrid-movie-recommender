@@ -1,7 +1,7 @@
 # Movie Recommendation System — Sprint Plan
 
 > **Sprint:** 24/07/2026 → 30/07/2026 (7 ngày, 2 phase)
-> **Team:** 5 người · **Dataset:** MovieLens 25M
+> **Team:** 5 người · **Dataset:** Kaggle Movie Recommendation System (MovieLens-style)
 > **Scope:** 3 phương pháp Recommender · **Demo:** T4 30/07
 
 ---
@@ -150,7 +150,7 @@ Chạy test bằng fixture nhỏ sau Demo v1, log bug, bổ sung test case S3/D/
 
 **Acceptance:**
 - `pytest tests/ -v` chạy xanh bằng fixture đã commit
-- Kỳ vọng hiện tại: 15 passed, 0 failed, 0 skipped
+- Kỳ vọng hiện tại: 46 passed, 0 failed, 0 skipped
 - C1/C2 (Toy Story / Heat genre overlap) vẫn là manual test trên data thật
 
 ---
