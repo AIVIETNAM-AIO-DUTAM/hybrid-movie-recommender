@@ -108,5 +108,5 @@
 ## Done khi (toàn sprint)
 
 Test report xanh P0/P1 trước **01/08 (APP FREEZE)**. Trạng thái tự động
-gần nhất: `15 passed`, `0 failed`, `0 skipped`. Eval chart + report section 8
+gần nhất: `46 passed`, `0 failed`, `0 skipped`. Eval chart + report section 8
 xong D12. Rehearsal D14.

@@ -20,7 +20,7 @@ TODO Tân Dư: 1 đoạn giới thiệu + bullet 3 mục tiêu.
 
 Owner: **Trần Hoàng Minh Tâm**
 
-- MovieLens 25M: movies.csv (62k phim, 2.9MB) + ratings.csv (25M ratings, 647MB)
+- Kaggle Movie Recommendation System / MovieLens-style data: movies.csv (62k phim, 2.9MB) + ratings.csv (25M ratings, 647MB)
 - Schema (PDF mục 2.1, 2.2) — tham chiếu `docs/data-dictionary.md`
 - Pipeline clean: tách year, genres_text, filter user≥20/movie≥50 (PDF mục 5)
 - Bảng số liệu trước/sau filter — copy từ `reports/eda_summary.md`
@@ -136,8 +136,8 @@ Owner: **Tân Dư** + cả nhóm
 
 ## Appendix
 
-- `document.pdf` — spec gốc
-- `TEAM_BOARD.md` — Kanban
+- `document.pdf` — root-level source spec
+- `TEAM_BOARD.md` — root-level Kanban snapshot
 - `plans/roles/` — chi tiết task từng người
 - `reports/eda_summary.md` — số liệu EDA
 - `reports/test_report.md` — kết quả test
